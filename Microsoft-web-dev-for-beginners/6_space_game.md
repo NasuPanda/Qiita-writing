@@ -146,7 +146,7 @@ https://github.com/microsoft/Web-Dev-For-Beginners/tree/main/6-space-game
 - Async/Await を**活用して**ゲームリソースをロードする
 - キーボードイベントを**処理する**
 
-![preview](./pewpew.gif)
+![preview](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/pewpew.gif?raw=true)
 
 > https://github.com/microsoft/Web-Dev-For-Beginners/tree/main/6-space-gameより
 
@@ -528,7 +528,7 @@ ctx.fillRect(10, 10, 150, 100);
 - 何がどこにあるのか表現するためにx, y座標を使う。
     - 左上が (0, 0)なので注意
 
-![about-canvas](./simple-square.png)
+![about-canvas](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/simple-square.png?raw=true)
 
 > [MDN](https://developer.mozilla.org/ja/docs/Web/API/Canvas_API/Tutorial/Drawing_shapes) より
 
@@ -570,7 +570,7 @@ ctx.arc(100, 100, 50, 0, 2 * Math.PI);
 ctx.fill();
 ```
 
-![circle](./blue-circle.png)
+![circle](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/blue-circle.png?raw=true))
 
 OK。
 
@@ -631,7 +631,7 @@ ctx.drawImage(image, dx, dy, dWidth, dHeight);
 ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
 ```
 
-![drawImage-params](drawImage-params.png)
+![drawImage-params](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/drawImage-params.png?raw=true)
 
 > [CanvasRenderingContext2D.drawImage()](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage) より
 
@@ -645,13 +645,18 @@ ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
 - プレイヤー/エネミーの描画
 
 プレイヤーの宇宙船
-![player](player.png)
+![player](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/player.png?raw=true)
 5×5のエネミー
-![enemy](enemyShip.png)
+![enemy](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/enemyShip.png?raw=true)
 
 > 画像参照元 [Microsoft Web-Dev-For-Geginners/6-space-game/2-drawing-to-canvas](https://github.com/microsoft/Web-Dev-For-Beginners/blob/main/6-space-game/2-drawing-to-canvas/translations/README.ja.md#%E4%BD%95%E3%82%92%E6%A7%8B%E7%AF%89%E3%81%99%E3%82%8B%E3%81%8B)]
 
 * `npm`のコマンドを使ってローカルサーバ(http://localhost:5000)を立ち上げたいので、`npm` `Node` を[インストール](https://docs.npmjs.com/getting-started)する必要がある。
+
+:::note warn
+この時 「Address already in use (port5000)」が発生。
+[【MacOS Monterey12】ポート5000を利用しようとすると「Address already in use」が発生する](https://qiita.com/NasuPanda/items/085bed62158aa987a64c)
+:::
 
 スタート時点のコード
 
