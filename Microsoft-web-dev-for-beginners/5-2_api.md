@@ -1,9 +1,3 @@
-<!--
-title:   MicrosoftのWeb開発教材を使ってみた ⑤-2ブラウザ拡張機能 【Promise/API/LocalStorage/拡張機能作成/BackGround/Performance】
-tags:    JavaScript,api,ブラウザ,初心者,拡張機能
-id:      59434d0841482fcef27d
-private: false
--->
 # はじめに
 
 **「Web Development For Beginners」**というMicrosoftがGithubに公開している教材についての記事です。
@@ -178,169 +172,173 @@ init();
 
 #### `init` `reset` 関数の実装(localStorageの利用)
 
-  初期設定、リセット用の関数を定義する。
-  特定の要素の表示/非表示は**`display`**を編集することで実装する。
+初期設定、リセット用の関数を定義する。
+特定の要素の表示/非表示は**`display`**を編集することで実装する。
 
-  - ユーザーが`APIKey`と**リージョンコード**をローカルストレージに保存しているかどうかチェック
-  - APIキーかリージョンコードのいずれかが NULL の場合、
-    - 入力フォームを表示
-    - results、loading、clearBtnを非表示
-    - エラーテキストを空文字列に設定
-  - APIキーとリージョンコードが存在する場合、以下の処理を行う
-      - APIを呼び出して炭素使用量データを取得する
-      - 結果エリアを隠す
-      - フォームを隠す
-      - リセットボタンを表示する
+- ユーザーが`APIKey`と**リージョンコード**をローカルストレージに保存しているかどうかチェック
+- APIキーかリージョンコードのいずれかが NULL の場合、
+  - 入力フォームを表示
+  - results、loading、clearBtnを非表示
+  - エラーテキストを空文字列に設定
+- APIキーとリージョンコードが存在する場合、以下の処理を行う
+    - APIを呼び出して炭素使用量データを取得する
+    - 結果エリアを隠す
+    - フォームを隠す
+    - リセットボタンを表示する
 
-  今回の例では、データの保存に**LocalStorage**を使用する。
+今回の例では、データの保存に**LocalStorage**を使用する。
 
-  - ブラウザに[キー:値]のペアとしてデータを保存しておくことができる機能
-  - SessionStorageと異なり期限切れがない
-  - ブラウザ拡張は独自のローカルストレージを持つ。メインブラウザウィンドウは別のインスタンスであり、別々に動作する。
-  - `getItem()` `setItem()` `removeItem()`のいずれかを使用して操作する
-  - 学習用なので平文のままのAPIキーをローカルストレージに保存するが、本来それは避けるべき
+- ブラウザに[キー:値]のペアとしてデータを保存しておくことができる機能
+- SessionStorageと異なり期限切れがない
+- ブラウザ拡張は独自のローカルストレージを持つ。メインブラウザウィンドウは別のインスタンスであり、別々に動作する。
+- `getItem()` `setItem()` `removeItem()`のいずれかを使用して操作する
+- 学習用なので平文のままのAPIキーをローカルストレージに保存するが、本来それは避けるべき
 
 ```js
-  function init() {
-    //ローカルストレージに保存されているキーを取得
-    const storedApiKey = localStorage.getItem('apiKey');
-    const storedRegion = localStorage.getItem('regionName');
+function init() {
+  //ローカルストレージに保存されているキーを取得
+  const storedApiKey = localStorage.getItem('apiKey');
+  const storedRegion = localStorage.getItem('regionName');
 
-    if (storedApiKey === null || storedRegion === null) {
-      //いずれかのキーが空ならフォームを表示
-      form.style.display = 'block';
-      results.style.display = 'none';
-      loading.style.display = 'none';
-      clearBtn.style.display = 'none';
-      errors.textContent = '';
-    } else {
-      //キーがローカルストレージに保存されていれば結果を表示
-      displayCarbonUsage(storedApiKey, storedRegion);
-      results.style.display = 'none';
-      form.style.display = 'none';
-      clearBtn.style.display = 'block';
-    }
-  };
-
-  function reset(e) {
-    e.preventDefault();
-    //「地域」をローカルストレージから削除
-    localStorage.removeItem('regionName');
-    init();
+  if (storedApiKey === null || storedRegion === null) {
+    //いずれかのキーが空ならフォームを表示
+    form.style.display = 'block';
+    results.style.display = 'none';
+    loading.style.display = 'none';
+    clearBtn.style.display = 'none';
+    errors.textContent = '';
+  } else {
+    //キーがローカルストレージに保存されていれば結果を表示
+    displayCarbonUsage(storedApiKey, storedRegion);
+    results.style.display = 'none';
+    form.style.display = 'none';
+    clearBtn.style.display = 'block';
   }
+};
+
+function reset(e) {
+  e.preventDefault();
+  //「地域」をローカルストレージから削除
+  localStorage.removeItem('regionName');
+  init();
+}
 ```
 
 #### フォーム送信の処理を追加
-  - `preventDefault` でイベントの伝搬を阻止
-    - イベント = `submit` イベント。
-    - デフォルトだとフォームの内容をURLに送信=ページが更新されてしまうため、それを阻止している。
-      - [参考 - MDN](https://developer.mozilla.org/ja/docs/Web/API/HTMLFormElement/submit_event#examples)
-  - 新しく追加する `setUpUser` 関数にapiKey, regionを渡す
+
+- `preventDefault` でイベントの伝搬を阻止
+  - イベント = `submit` イベント。
+  - デフォルトだとフォームの内容をURLに送信=ページが更新されてしまうため、それを阻止している。
+    - [参考 - MDN](https://developer.mozilla.org/ja/docs/Web/API/HTMLFormElement/submit_event#examples)
+- 新しく追加する `setUpUser` 関数にapiKey, regionを渡す
 
 ```js
-  function handleSubmit(e) {
-    e.preventDefault();
-    setUpUser(apiKey.value, region.value);
-  }
+function handleSubmit(e) {
+  e.preventDefault();
+  setUpUser(apiKey.value, region.value);
+}
 
-  // 呼び出される場所
-  form.addEventListener('submit', (e) => handleSubmit(e));
+// 呼び出される場所
+form.addEventListener('submit', (e) => handleSubmit(e));
 ```
 
 #### `setUpUser`関数でローカルストレージにAPIキーとリージョンの値を設定
-  - API呼び出し中に表示されるロード画面を設定
+
+- API呼び出し中に表示されるロード画面を設定
 
 ```js
-  function setUpUser(apiKey, regionName) {
-    localStorage.setItem('apiKey', apiKey);
-    localStorage.setItem('regionName', regionName);
-    loading.style.display = 'block';
-    errors.textContent = '';
-    clearBtn.style.display = 'block';
+function setUpUser(apiKey, regionName) {
+  localStorage.setItem('apiKey', apiKey);
+  localStorage.setItem('regionName', regionName);
+  loading.style.display = 'block';
+  errors.textContent = '';
+  clearBtn.style.display = 'block';
 
-    displayCarbonUsage(apiKey, regionName);
-  }
+  displayCarbonUsage(apiKey, regionName);
+}
 ```
 
 #### APIへの問い合わせ、炭素使用量の表示
-  - **API** Application Programming Interface
-    - ソフトウェアの一部機能を共有する仕組みのこと
-    - 機能を公開している側⇔利用したい側をつなぐインターフェース
-    - RESTAPIが最も一般的で、HTTPリクエスト/URLなどを利用してデータ(一般的にはJSONファイル)をやり取りする
-  - **async/await** 非同期処理
-    - 「データを返す」などの処理が完了するのを待ってから処理を続ける
-      - APIの応答速度を制御できないため
-  - レスポンスの内容を表示する
-    - エラー、内容が無い場合はエラーメッセージを表示する
+
+- **API** Application Programming Interface
+  - ソフトウェアの一部機能を共有する仕組みのこと
+  - 機能を公開している側⇔利用したい側をつなぐインターフェース
+  - RESTAPIが最も一般的で、HTTPリクエスト/URLなどを利用してデータ(一般的にはJSONファイル)をやり取りする
+- **async/await** 非同期処理
+  - 「データを返す」などの処理が完了するのを待ってから処理を続ける
+    - APIの応答速度を制御できないため
+- レスポンスの内容を表示する
+  - エラー、内容が無い場合はエラーメッセージを表示する
 
 ```js
- import axios from '../node_modules/axios';
- 
- async function displayCarbonUsage(apiKey, region) {
- 	try {
- 		await axios
- 			.get('https://api.co2signal.com/v1/latest', {
- 				params: {
- 					countryCode: region,
- 				},
- 				headers: {
- 					'auth-token': apiKey,
- 				},
- 			})
- 			.then((response) => {
- 				let CO2 = Math.floor(response.data.data.carbonIntensity);
+import axios from '../node_modules/axios';
 
- 				loading.style.display = 'none';
- 				form.style.display = 'none';
- 				myregion.textContent = region;
- 				usage.textContent =
- 					Math.round(response.data.data.carbonIntensity) + ' grams (grams C02 emitted per kilowatt hour)';
- 				fossilfuel.textContent =
- 					response.data.data.fossilFuelPercentage.toFixed(2) +
- 					'% (percentage of fossil fuels used to generate electricity)';
- 				results.style.display = 'block';
- 			});
- 	} catch (error) {
- 		console.log(error);
- 		loading.style.display = 'none';
- 		results.style.display = 'none';
- 		errors.textContent = 'Sorry, we have no data for the region you have requested.';
- 	}
- }
+async function displayCarbonUsage(apiKey, region) {
+try {
+	await axios
+		.get('https://api.co2signal.com/v1/latest', {
+			params: {
+				countryCode: region,
+			},
+			headers: {
+				'auth-token': apiKey,
+			},
+		})
+		.then((response) => {
+			let CO2 = Math.floor(response.data.data.carbonIntensity);
+
+			loading.style.display = 'none';
+			form.style.display = 'none';
+			myregion.textContent = region;
+			usage.textContent =
+				Math.round(response.data.data.carbonIntensity) + ' grams (grams C02 emitted per kilowatt hour)';
+			fossilfuel.textContent =
+				response.data.data.fossilFuelPercentage.toFixed(2) +
+				'% (percentage of fossil fuels used to generate electricity)';
+			results.style.display = 'block';
+		});
+} catch (error) {
+	console.log(error);
+	loading.style.display = 'none';
+	results.style.display = 'none';
+	errors.textContent = 'Sorry, we have no data for the region you have requested.';
+}
+}
 ```
 
-  この関数は**async キーワード**が使われている。これは、関数が非同期で実行されることを表す。
+この関数は**async キーワード**が使われている。これは、関数が非同期で実行されることを表す。
 
-  * データが返されるなどのアクションが完了するのを待ってから処理を続けることを意味する。
-  * try/catchブロックが含まれており、APIがデータを返したときに`Promise`を返すようになっている。APIが応答する速度を制御できないので（全く応答しないかもしれない）、非同期で呼び出すことによってこの不確実性を処理している。
+* データが返されるなどのアクションが完了するのを待ってから処理を続けることを意味する。
+* try/catchブロックが含まれており、APIがデータを返したときに`Promise`を返すようになっている。APIが応答する速度を制御できないので（全く応答しないかもしれない）、非同期で呼び出すことによってこの不確実性を処理している。
 
-  また、**`axios`**も使われている。[公式](https://github.com/axios/axios)によると、
-  > Promise based HTTP client for the browser and node.js
+また、**`axios`**も使われている。[公式](https://github.com/axios/axios)によると、
+> Promise based HTTP client for the browser and node.js
 
-  直訳するとブラウザや node.js で動く Promise ベースの HTTP クライアント。
+直訳するとブラウザや node.js で動く Promise ベースの HTTP クライアント。
 
-  * 簡潔にHTTP通信の処理が書けることや、ブラウザ・node.jsに対応していることが利点らしい。
-  * ここでは`get`メソッドを使って`response`を得ている。
-    * [`response.data`の中身](https://github.com/axios/axios#response-schema)
+* 簡潔にHTTP通信の処理が書けることや、ブラウザ・node.jsに対応していることが利点らしい。
+* ここでは`get`メソッドを使って`response`を得ている。
+  * [`response.data`の中身](https://github.com/axios/axios#response-schema)
 
-      `js
-      // `data` is the response that was provided by the server
-      data: {},
-      `
-  * `params`や`headers`などに値を渡すことで色々と[設定](https://github.com/axios/axios#request-config)できる。
+    ```js
+    // `data` is the response that was provided by the server
+    data: {},
+    ```
 
-    `js
-    // `headers` are custom headers to be sent
-    headers: {'X-Requested-With': 'XMLHttpRequest'},
+* `params`や`headers`などに値を渡すことで色々と[設定](https://github.com/axios/axios#request-config)できる。
 
-    // `params` are the URL parameters to be sent with the request
-    // Must be a plain object or a URLSearchParams object
-    params: {
-      ID: 12345
-    },
-    `
-    * 試しにQiitaにアクセスする時のHTTPヘッダを見てみる
-     ![headers](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/1224564/03f3abb2-0e0a-b660-7520-347a44e105e5.png)
+  ```js
+  // `headers` are custom headers to be sent
+  headers: {'X-Requested-With': 'XMLHttpRequest'},
+
+  // `params` are the URL parameters to be sent with the request
+  // Must be a plain object or a URLSearchParams object
+  params: {
+    ID: 12345
+  },
+  ```
+  * 試しにQiitaにアクセスする時のHTTPヘッダを見てみる
+   ![headers](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/1224564/03f3abb2-0e0a-b660-7520-347a44e105e5.png)
 
 ## `Promise` is 何
 
