@@ -1169,7 +1169,7 @@ window.onload = async () => {
 
 ![result](https://user-images.githubusercontent.com/85564407/153684985-9972a5a4-d5c8-44f8-9897-cc6a48a41bfd.gif)
 
-### 課題
+### 課題 コメントをつける
 
 > ゲームフォルダ内の現在の /app.js ファイルに目を通し、コメントを付けて片付ける方法を見つけてください。コードはいとも簡単に制御不能になります。今はコメントを追加して、後で使えるように読みやすいコードにする良い機会です。
 
@@ -1472,3 +1472,666 @@ window.addEventListener("load", onLoad);
 ### 副教材
 
 - Javascriptを使った[ゲーム開発用のcanvasフレームワーク](https://github.com/collections/javascript-game-engines)
+
+## レーザーと衝突検出
+
+面白そう・・・！
+
+### 追加するもの
+
+- **レーザー** プレイヤーの宇宙船から垂直・↑向きに発射される
+- **衝突検出**
+    - **レーザーが敵に当たる**と敵が破壊される
+    - **レーザーが画面上部に当たる**とレーザーが破壊される
+    - **敵とプレイヤーが衝突**すると破壊される
+    - **敵が画面下部に当たる**と敵とプレイヤーが破壊される
+
+### 衝突検出
+
+- ゲームオブジェクトを長方形(`x`、`y`、`width`、`height`)として考える。
+- ゲームオブジェクトの座標を取得する
+
+```js
+rectFromGameObject() {
+  return {
+    top: this.y,
+    left: this.x,
+    bottom: this.y + this.height,
+    right: this.x + this.width
+  }
+}
+```
+
+- 比較する
+
+```js
+function intersectRect(r1, r2) {
+  return !(r2.left > r1.right ||
+    r2.right < r1.left ||
+    r2.top > r1.bottom ||
+    r2.bottom < r1.top);
+}
+```
+
+左上が(0, 0)なので、「左側が右側を超えない」or「上側が下側を超えない」場合OK、そうでなければ衝突している判定。
+
+### オブジェクトの破壊
+
+- `GameObject` に持たせてあった `dead` プロパティを利用する。
+    - 具体的には、 `dead` が `true` なら描画しないようにする。
+
+```js
+enemy.dead = true;
+
+gameObjects = gemeObject.filter(go => !go.dead);
+```
+
+### レーザーの撃ち方
+
+- レーザーの発射を言い換えれば、「特定のキーイベントに反応して特定の方向に移動するオブジェクトを作成すること」になる。
+- エネミーにインターバルをセットして座標情報を更新し続けることで移動させたように、レーザの移動はインターバルをセットするような実装をすると思われる。
+
+### レーザーのクールダウン
+
+- レーザーはキーを押すたび発射するが、短時間で多くのレーザーが発射されないようにクールダウンを実装する必要がある。
+
+```js
+class Cooldown {
+  constructor(time) {
+    this.cool = false;
+    setTimeout(() => {
+      this.cool = true;
+    }, time)
+  }
+}
+
+class Weapon {
+  constructor {
+  }
+  fire() {
+    if (!this.cooldown || this.cooldown.cool) {
+      // レーザーを作る
+      this.cooldown = new Cooldown(500);
+    } else {
+      // 何もしない-まだクールダウンしていない。
+    }
+  }
+}
+```
+
+- `fire` が実行されたときに 、
+    - `cooldown` がない
+    - `cooldown.cool` が `true`
+    - のどちらかなら、 `cooldown` インスタンスを初期化する。
+
+### 実装
+
+- レーザー
+- **衝突検出**
+    - **レーザーが敵に当たる**と敵が破壊される
+    - **レーザーが画面上部に当たる**とレーザーが破壊される
+    - **敵とプレイヤーが衝突**すると破壊される
+    - **敵が画面下部に当たる**と敵とプレイヤーが破壊される
+
+1. **衝突処理のためオブジェクトの短形表現を設定する**
+    - `GameObject` クラスに追加する
+    - 欲しい情報のプロパティを持ったオブジェクトを作成、 `return` している
+
+    ```js
+    rectFromGameObject() {
+        return {
+          top: this.y,
+          left: this.x,
+          bottom: this.y + this.height,
+          right: this.x + this.width,
+        };
+      }
+    ```
+
+2. **衝突をチェックする関数**
+
+    ```js
+    function isIntersectRect(r1, r2) {
+      return !(
+        r2.left > r1.right ||
+        r2.right < r1.left ||
+        r2.top > r1.bottom ||
+        r2.bottom < r1.top
+      );
+    }
+    ```
+    
+3. **レーザー発射機能の追加**
+    1. **スペースキーにより発行されるメッセージ/衝突により発行されるメッセージを追加**
+    2. **メッセージに対応する関数を追加**
+        
+        ```js
+        // onkeyUp関数を編集
+        } else if(evt.keyCode === 32) {
+        	  eventEmitter.emit(Messages.KEY_EVENT_SPACE);
+        }
+        ```
+        
+        ```js
+        // eventEmitter.onを追加する
+        eventEmitter.on(Messages.KEY_EVENT_SPACE, () => {
+         if (hero.canFire()) {
+           hero.fire();
+         }
+
+        eventEmitter.on(Messages.COLLISION_ENEMY_LASER, (_, { first, second }) => {
+          first.dead = true;
+          second.dead = true;
+        })
+        ```
+
+        - `first` `second` は `emit` にペイロードとして渡されるオブジェクト
+        - 1つ目の引数はイベントなので使わない
+
+    3. **レーザークラスの定義**
+        - エネミークラスと同じ要領でモーション付きのクラスとして実装する。
+
+        ```js
+        class Laser extends GameObject {
+          constructor(x, y) {
+            super(x,y);
+            (this.width = 9), (this.height = 33);
+            this.type = 'Laser';
+            this.img = laserImg;
+            // 上方向に移動し続ける
+            let id = setInterval(() => {
+              if (this.y > 0) {
+                this.y -= 15;
+              } else {
+                this.dead = true;
+                clearInterval(id);
+              }
+            }, 100)
+          }
+        }
+        ```
+
+    4. **オブジェクトの衝突をテストする関数を追加**
+        - 衝突判定が `true`だった `first` `second`(2つのオブジェクト)はリスナーにペイロードとして渡され、`dead=true` に変更される。
+        - ゲームループへの追加を忘れずに。
+
+        ```js
+        function updateGameObjects() {
+          const enemies = gameObjects.filter(go => go.type === 'Enemy');
+          const lasers = gameObjects.filter((go) => go.type === "Laser");
+
+          lasers.forEach((l) => {
+            enemies.forEach((m) => {
+              if (intersectRect(l.rectFromGameObject(), m.rectFromGameObject())) {
+              eventEmitter.emit(Messages.COLLISION_ENEMY_LASER, {
+                first: l,
+                second: m,
+              });
+            }
+           });
+        });
+
+          gameObjects = gameObjects.filter(go => !go.dead);
+        }
+        ```
+
+    5. **`Hero` クラスにレーザーを実装する**
+        - `cooldown`プロパティを追加することでクールダウン機能を実装。
+        - `canFire` でクールダウンの判定を行う。
+
+        ```js
+        class Hero extends GameObject {
+        	// 省略
+        	this.cooldown = 0;
+        	 }
+        	 fire() {
+        	   gameObjects.push(new Laser(this.x + 45, this.y - 10));
+        	   this.cooldown = 500;
+        	
+        	   let id = setInterval(() => {
+        	     if (this.cooldown > 0) {
+        	       this.cooldown -= 100;
+        	     } else {
+        	       clearInterval(id);
+        	     }
+        	   }, 200);
+        	 }
+        	 canFire() {
+        	   return this.cooldown === 0;
+        	 }
+        }
+        ```
+
+完成。
+
+![laser](https://user-images.githubusercontent.com/85564407/153735167-9c63decc-a794-4104-9d54-43d6922ac812.gif)
+
+ですが、現時点の実装だと「**敵とプレイヤーが衝突**すると破壊される」機能が未実装なので、実装してみます。
+
+```js
+/** 衝突判定、処理を行う。 */
+function updateGameObjects() {
+  const enemies = gameObjects.filter(go => go.type === 'Enemy');
+  const lasers = gameObjects.filter((go) => go.type === "Laser");
+
+	const heroRect = hero.rectFromGameObject()
+  enemies.forEach((enemy) => {
+    if (isIntersectRect(heroRect, enemy.rectFromGameObject())) {
+      eventEmitter.emit(Messages.COLLISION_ENEMY_HERO, {enemy})
+    }
+  })
+```
+
+```js
+eventEmitter.on(Messages.COLLISION_ENEMY_HERO, (_, {enemy}) => {
+  enemy.dead = true;
+  hero.dead = true;
+})
+```
+
+![enemy-collision_AdobeCreativeCloudExpress](https://user-images.githubusercontent.com/85564407/153735244-4e6ba452-91e3-4925-8fa1-5cf5844c6e2d.gif)
+
+OKですね。
+
+### チャレンジ アニメーション実装
+
+[スペースアートレポ](https://github.com/microsoft/Web-Dev-For-Beginners/blob/main/6-space-game/solution/spaceArt/readme.txt)のゲームアセットを使い、レーザーがエネミーにあたった時に爆発が起きるようにする。
+
+[この画像](https://github.com/microsoft/Web-Dev-For-Beginners/blob/main/6-space-game/solution/spaceArt/png/laserRedShot.png)を利用します。
+
+- `onLoad` で画像の読み込み
+
+```js
+laserHitImg = await loadTexture("assets/laserRedShot.png")
+```
+
+- エネミークラスにレーザー衝突時に実行するメソッドを追加
+
+```js
+/** レーザーが当たった */
+hitLaser() {
+  gameObjects.push(new Explosion(this.x, this.y))
+}
+```
+
+- 爆発クラスを追加
+    - `setTimeout` でしばらくしたら消えるようにする
+
+```js
+class Explosion extends GameObject {
+  /**
+   * x座標とy座標を初期化する。
+   */
+  constructor(x, y) {
+    super(x, y);
+    (this.width = 100), (this.height = 50);
+    this.type = "explosion";
+    this.img = laserShotImg;
+
+    // しばらくしたら消える。
+    let timeoutID = window.setTimeout(() => {
+      this.dead = true;
+    }, 200);
+  }
+}
+```
+
+- `COLLISION_ENEMY_LASER` メッセージ発行時に実行されるイベントに `shotLaser` を追加。
+    - 変数名が`first` `second` だとわかりにくいので  `laser` `enemy` に変更
+
+```js
+eventEmitter.on(Messages.COLLISION_ENEMY_LASER, (_, { laser, enemy }) => {
+      // laser, enemy はペイロードとして渡されるオブジェクト。
+      laser.dead = true;
+      enemy.dead = true;
+      enemy.hitLaser()
+    })
+```
+
+![explosion](https://user-images.githubusercontent.com/85564407/153735340-e243ee78-5720-4673-aa2d-f212aa597d69.gif)
+
+OK。
+
+### 副教材 タイミングイベント
+
+[JavaScriptのタイミングイベント 詳細](https://www.freecodecamp.org/news/javascript-timing-events-settimeout-and-setinterval/)
+
+- `[setTimeout](https://developer.mozilla.org/ja/docs/Web/API/setTimeout)`
+    - `timeoutID = scope.setTimeout(function[, delay, arg1, arg2, ...]);`
+    - 指定した時間が経過すると、引数として渡した関数が実行される
+    - 単位はミリ秒なので注意
+    - 実行したい関数に引数を渡すことも出来る
+    - `clearTimeout` に `setTimeout` の返り値であるIDを渡すとタイマーがクリアされる(=関数は実行されない)
+- `[setInterval](https://developer.mozilla.org/ja/docs/Web/API/setInterval)`
+    - *`intervalID = scope.*setInterval(func,delay[,param1, param2 ...]);`
+    - 指定した間隔で、渡された関数を繰り返し実行する
+    - `clearInterval`に `setInterval` の返り値であるIDを渡すとタイマーがクリアされる(=それ以降は実行されない)
+
+## スコアとライフ
+
+### 画面上にテキストを描画する
+
+ゲームのスコアを画面に表示するには、 `canvas` オブジェクトの `fillText` メソッドを使う。
+
+```js
+ctx.font = "30px Arial";
+ctx.fillStyle = "red";
+ctx.textAlign = "right";
+ctx.fillText("show this on the screen", 0, 0);
+```
+
+[文字を描く - MDN](https://developer.mozilla.org/ja/docs/Web/API/Canvas_API/Tutorial/Drawing_text)
+
+- `fillText(text, x, y[, maxWidth])`
+    - x, yで指定した位置にテキストを塗りつぶして描画。
+    - 任意で最大描画幅を指定できる。
+- `strokeText(text, x, y [, maxWidth])`
+    - テキストの輪郭を描画。
+
+### 追加するもの
+
+- **ゲームのスコア** 敵艦が破壊されるごとにポイントがプラスされる。
+- **ライフ** プレイヤーには３つのライフが与えられる。
+    - 敵の船が衝突する度にライフを失う。
+    - ライフスコアは右下に表示され、グラフィカルに表現される(ミニシップ)。
+
+1. 画像を読み込む
+2. `Hero` クラスに `points` と `life` を追加
+3. `updateGameObjects` を拡張子、敵とヒーローの衝突に対応するようにする。
+    - 既にやってしまった・・・実装はほとんど同じでした。
+4. 画面上にライフとスコアを描画する
+    - `drawLife` は `START_POS` からスタートし、 `[hero.life](http://hero.life)` の数だけライフを描画する。
+    - `drawPoints` は `fillText` を利用。
+        - `drawText` をわざわざ分離しているのは今後リザルト画面などで利用するため？
+
+    ```js
+    function drawLife() {
+      const START_POS = canvas.width - 180;
+      for(let i=0; i < hero.life; i++ ) {
+        ctx.drawImage(
+          lifeImg, 
+          START_POS + (45 * (i+1) ), 
+          canvas.height - 37);
+      }
+    }
+
+    function drawPoints() {
+      ctx.font = "30px Arial";
+      ctx.fillStyle = "red";
+      ctx.textAlign = "left";
+      drawText("Points: " + hero.points, 10, canvas.height-20);
+    }
+
+    function drawText(message, x, y) {
+      ctx.fillText(message, x, y);
+    }
+    ```
+
+5. ゲームのルールを実装する。
+    - **ヒーローと敵の衝突ごとにライフを差し引きする**
+    - 自分で実装した際はヒーローが敵と衝突したら即死だったので、優しくなりましたね。
+    
+    ```js
+    decrementLife() {
+      this.life--;
+      if (this.life === 0) {
+        this.dead = true;
+      }
+    }
+    ```
+    
+    - **レーザーが敵に当たるたびにスコア+100**
+    
+    ```js
+    incrementPoints() {
+        this.points += 100;
+      }
+    ```
+    
+    - これらの機能を衝突イベントエミッタに追加する
+    
+    ```js
+    eventEmitter.on(Messages.COLLISION_ENEMY_LASER, (_, { first, second }) => {
+       first.dead = true;
+       second.dead = true;
+       hero.incrementPoints();
+    })
+    
+    eventEmitter.on(Messages.COLLISION_ENEMY_HERO, (_, { enemy }) => {
+       enemy.dead = true;
+       hero.decrementLife();
+    });
+    ``
+
+![life](https://user-images.githubusercontent.com/85564407/153735481-f3cab1ac-0fce-4094-b3e1-da222880c2f1.gif)
+
+OK。
+
+## 終了と再起動
+
+終了条件・リザルト画面・リスタート機能を追加する。
+
+1. **終了条件の追跡**
+    - ここでは生きている `Enemy` を取得→長さ0かどうかで判定している
+    
+    ```js
+    function isHeroDead() {
+      return hero.life <= 0;
+    }
+    
+    function isEnemiesDead() {
+      const enemies = gameObjects.filter((go) => go.type === "Enemy" && !go.dead);
+      return enemies.length === 0;
+    }
+    ```
+    
+2. **メッセージハンドラにロジックを追加**
+    - ✅ レーザーヒット時、敵が全滅した場合勝利
+    - ❎ プレイヤーとエネミーの衝突時
+      - ヒーローが死亡した場合敗北
+        - このとき次の判定に進まないように `return` する
+      - 敵が全滅した場合勝利
+    
+    ```js
+    eventEmitter.on(Messages.COLLISION_ENEMY_LASER, (_, { first, second }) => {
+        first.dead = true;
+        second.dead = true;
+        hero.incrementPoints();
+    
+        if (isEnemiesDead()) {
+          eventEmitter.emit(Messages.GAME_END_WIN);
+        }
+    });
+    
+    eventEmitter.on(Messages.COLLISION_ENEMY_HERO, (_, { enemy }) => {
+        enemy.dead = true;
+        hero.decrementLife();
+        if (isHeroDead())  {
+          eventEmitter.emit(Messages.GAME_END_LOSS);
+          return; // 勝利前に敗北
+        }
+        if (isEnemiesDead()) {
+          eventEmitter.emit(Messages.GAME_END_WIN);
+        }
+    });
+    
+    eventEmitter.on(Messages.GAME_END_WIN, () => {
+        endGame(true);
+    });
+      
+    eventEmitter.on(Messages.GAME_END_LOSS, () => {
+      endGame(false);
+    });
+    ```
+    
+3. **選択したボタンの入力でゲームを再起動する**
+    
+    ```js
+    else if(evt.key === "Enter") {
+        eventEmitter.emit(Messages.KEY_EVENT_ENTER);
+      }
+    ```
+    
+4. **ゲームルールの実装**
+    - ゲームの終了時、メッセージを表示する
+    
+    ```js
+    function endGame(win) {
+      clearInterval(gameLoopId);
+    
+      // 直前の描画終了を待つため遅延を設定
+      setTimeout(() => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (win) {
+          displayMessage(
+            "Victory!!! Pew Pew... - Press [Enter] to start a new game Captain Pew Pew",
+            "green"
+          );
+        } else {
+          displayMessage(
+            "You died !!! Press [Enter] to start a new game Captain Pew Pew"
+          );
+        }
+      }, 200)  
+    }
+    ```
+    
+    - 再起動ロジック
+    
+    ```js
+    function resetGame() {
+      if (gameLoopId) {
+        clearInterval(gameLoopId);
+        eventEmitter.clear();
+        initGame();
+        gameLoopId = setInterval(() => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "black";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          drawPoints();
+          drawLife();
+          updateGameObjects();
+          drawGameObjects(ctx);
+        }, 100);
+      }
+    }
+    ```
+    
+    ```js
+    eventEmitter.on(Messages.KEY_EVENT_ENTER, () => {
+      resetGame();
+    });
+    ```
+    
+    - `EventEmitter` のクリアも忘れず。
+    
+    ```js
+    clear() {
+      this.listeners = {};
+    }
+    ```
+    
+### 副教材 サウンドの再生
+
+[sandbox](https://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_audio_play)
+[`<audio>`要素](https://developer.mozilla.org/ja/docs/Web/HTML/Element/audio)について
+
+```html
+<audio src="/media/hoge.mp3">
+	Your browser does not support the audio element.
+</audio>
+```
+
+- `<audio>` の中のコンテンツはこの要素に対応していないブラウザで代替として表示される
+- `src` 属性にコンテンツのURLを指定
+- 自動再生指定もできるが、可能な限り避けるべき
+- `src` は子要素として指定することも可能
+    
+    ```html
+    <audio controls>
+     <source src="foo.opus" type="audio/ogg; codecs=opus"/>
+     <source src="foo.ogg" type="audio/ogg; codecs=vorbis"/>
+     <source src="foo.mp3" type="audio/mpeg"/>
+    </audio>
+    ```
+    
+    - ブラウザーは最初の source 要素 (Opus) を読み込もうとする。再生することができれば、2番目 (vorbis) と3番目 (mp3) の読み込みは行われない。
+- [HTMLMediaElement.play()](https://developer.mozilla.org/ja/docs/Web/API/HTMLMediaElement/play)
+    - メディアの再生を開始しようとし、再生が正常に開始されると解決する `Promise` を返す。
+
+```js
+let x = document.getElementById("myAudio"); 
+
+function playAudio() { 
+  x.play(); 
+}
+```
+
+### 課題 サンプルゲームを作る
+
+こんな感じで作れば良いのかな、というのを書きます。
+
+#### RPG的なゲーム
+
+最低限必要であろう要素
+
+- プレイヤー/敵の移動
+    - プレイヤーはキーボードイベントで移動
+    - 敵は決めたルートを移動し続けるorランダムに動く
+- 敵とのエンカウント
+    - マス目区切りでマップを作って、座標がかぶるor隣接したら
+    - 「スペースゲーム」のようにオブジェクトの座標から接触判定
+    - もしくはランダムエンカウント
+- ゲームオブジェクトが持つ主なプロパティ
+    - xy座標/幅と高さ/画像
+        - 主に描画やイベントの判定に使用
+    - hp/mp
+    - attack/defense
+        - 戦闘時のダメージ計算に使用する
+    - equip
+        - プレイヤーの装備、attack/defenseを加算する
+    - coin/exp/item
+        - 敵が持つ、戦闘終了時プレイヤーに渡される
+- 戦闘システム
+    - エンカウントしたら戦闘開始
+    - コインや経験値、アイテムなどを勝利時に取得できるようにすると良さそう
+    - アイテムの抽選はアイテムと `null` のリストを作っておいてそこからランダムに取り出す？
+    
+    ```js
+    // イメージ
+    function battle(enemy) {
+    	while (!hero.isDead && !enemy.idDead) {
+    		hero.attack(); // プレイヤーが何か選択
+    		enemy.attack(); // ランダムに何かする
+    	}
+    
+    // 勝利時
+    hero.getCoin(enemy);
+    hero.getItem(enemy); // ランダムに判定
+    ```
+    
+- コインを利用して装備・アイテムなどを買える
+    - 特定のキーを押したらショップが開く
+    - マップのどこかにあるショップに行けば買える
+
+## 学んだこと
+
+- Pub-Subパターンについて
+    - プロジェクトの規模や内容に応じて適切なアーキテクチャを採用することが重要
+    - Pub-Subパターンはゲームのように、イベント発生などをコンポーネント同士で伝え合う必要がある場合に有用
+    - 継承は `is-a` の関係、コンポジションは `has-a` の関係
+- Canvasについて
+    - `canvas` 要素を使うことでJavaScriptを用いて色々と描画することができる
+    - 座標情報の更新→再描画によりオブジェクトの移動を表現できる
+    - 状態の更新には`setTimeout` や `setInterval`を使う
+        - インターバルを設定したゲームループにより、ゲームを描画し続ける
+- 衝突検知
+    - 衝突検知の最も単純な方法は、オブジェクトを短形として扱い座標で判定すること
+    - 「描画しない」ようにすることでオブジェクトの死亡・破壊を表現できる
+    - クールダウンはタイマーで実装できる
+- スコアとライフ
+    - スコア/ライフのプロパティを持っておいて、イベント発生時に更新すればいい
+- 終了と再起動
+    - ただ終了するだけでなく、リザルトの表示や再起動もできると良い
