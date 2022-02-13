@@ -1,4 +1,4 @@
-# Qiita-Sync Template
+# Qiita-Writing
 
 参考
 
