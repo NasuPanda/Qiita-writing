@@ -691,3 +691,337 @@ function notifyDashboardDisplay(route) {
 ![notify-dashboard](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/notify-dashboard-display.png?raw=true)
 
 OK。
+
+***
+
+## ログインと登録フォームの構築
+
+### イントロダクション
+
+最近のWebアプリは、複数のユーザが同時にアクセスできることから、各ユーザの個人方法を個別に保存・どの情報を表示するか選択する仕組みが必要となる。
+
+そこで、各ユーザーがアプリ上で銀行口座を作成できるようにする。
+このパートでは、HTMLフォームを使用してログイン・登録機能を追加する。
+その中で、プログラムでサーバーAPIにデータを送信する方法、ユーザ入力の基本的な検証ルールを定義する方法を見ていく。
+
+銀行アプリのサーバーAPIは既に用意されているので、それを利用する。
+銀行APIはNode.js+Expressで構築されている。
+
+[銀行APIの詳細](https://github.com/microsoft/Web-Dev-For-Beginners/blob/main/7-bank-project/api/translations/README.ja.md)
+
+![bank-api](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/bank-api.png?raw=true)
+
+1. `api` フォルダに移動
+2. `npm install`
+3. `npm start` → サーバーはポート5000で待ち受けを開始する。
+
+`curl http://localhost:5000/api` を実行することで、サーバーが正常に動作していることを確認できる。
+
+```bash
+curl http://localhost:5000/api
+# -> "Bank API v1.0.0"ならOK
+```
+
+以下の記事でAPIの概要とNode.js+Expressを使った簡単なAPI構築について触れています。
+
+⭐要更新⭐
+
+### フォームとコントロール
+
+`<form>` 要素を使うことでHTMLのセクションをカプセル化し、
+ユーザがUIコントロールを利用してデータを入力・送信出来るようになる。
+
+`<form>` で使われる中で最も一般的なUIは `<input>` `<button>` 。
+
+#### input
+
+例えば、`<input>`を使えばユーザ名を入力できるフィールドを作成できる。
+
+```html
+<input id="username" name="username" type="text">
+```
+
+参考 : [<input>: 入力欄(フォーム入力)要素 - MDN](https://developer.mozilla.org/ja/docs/Web/HTML/Element/input)
+
+- `name` : フォームデータを送信する際の**プロパティとして**利用
+- `id` : `<label>`をフォームコントロールに**関連付ける**ために使用
+    - [<input>要素 >> ラベルについて - MDN](https://developer.mozilla.org/ja/docs/Web/HTML/Element/input#:~:text=%E8%BF%BD%E5%8A%A0%E6%A9%9F%E8%83%BD-,%E3%83%A9%E3%83%99%E3%83%AB,-%E3%83%A9%E3%83%99%E3%83%AB%E3%81%AF%E6%94%AF%E6%8F%B4)
+    - `<input>` `<label>` を関連付けると、ラベルと入力欄を結びつける事ができる=スクリーンリーダーが正確に入力欄を説明できるようになる
+
+```html
+<!-- アクセシブルではない -->
+<p>名前を入力してください: <input id="name" type="text" size="30"></p>
+
+<!-- 暗黙的なラベル -->
+<p><label>名前を入力してください: <input id="name" type="text" size="30"></label></p>
+
+<!-- 明示的なラベル -->
+<p><label for="name">名前を入力してください: </label><input id="name" type="text" size="30"></p>
+```
+
+✅ <input> は [Empty element(空要素) - MDN](https://developer.mozilla.org/ja/docs/Glossary/Empty_element) であることに注意。
+空要素とは、子ノードを持つことが出来ないもの。閉じタグは基本禁止。
+
+#### button
+
+`<button>` 要素は少し特殊。
+`type` 属性を指定しないと、ボタンが押されたときに**自動的にフォームデータをサーバに送信**する。
+
+以下に`type` の値を示す。
+
+- `submit` : `<form>`内のデフォルトの値で、ボタンはフォームの送信アクションをトリガーする
+- `reset` : ボタンはすべてのフォームコントロールを初期値にリセットする
+- `button` : ボタンが押されたときのデフォルトの動作を割り当てないで、JavaScript を使ってカスタムアクションを割り当てることができる
+
+#### 実装
+
+```html
+<template id="login">
+  <h1>Bank App</h1>
+  <section>
+    <h2>Login</h2>
+    <form id="loginForm">
+      <label for="username">Username</label>
+      <input id="username" name="user" type="text">
+      <button>Login</button>
+    </form>
+  </section>
+</template>
+```
+
+ラベル要素の導入には以下のようなメリットがある。
+
+- フォームが読みやすくなる
+- スクリーンリーダーユーザーに役立つ
+- ラベルをクリックすると関連する入力に直接フォーカスできる → タッチスクリーンベースのデバイスでも操作しやすい
+
+ログインフォームの下に登録フォームを置く。
+
+```html
+<h2>Register</h2>
+<form id="registerForm">
+  <label for="user">Username</label>
+  <input id="user" name="user" type="text">
+  <label for="currency">Currency</label>
+  <input id="currency" name="currency" type="text" value="$">
+  <label for="description">Description</label>
+  <input id="description" name="description" type="text">
+  <label for="balance">Current balance</label>
+  <input id="balance" name="balance" type="number" value="0">
+  <button>Register</button>
+</form>
+```
+
+- `value` により与えられた入力に対して**デフォルト値を定義**できる
+- `balance` の入力は `number` 。
+
+### サーバーへのデータ送信
+
+標準的なUIができたので、次にデータをサーバへ送信する。
+現在のUIを使って値を送信してみると、URLが次のように変化する。
+
+![after-input-url]([https://github.com/microsoft/Web-Dev-For-Beginners/raw/main/7-bank-project/2-forms/images/click-register.png](https://github.com/microsoft/Web-Dev-For-Beginners/raw/main/7-bank-project/2-forms/images/click-register.png))
+
+`<form>` のデフォルトのアクションは、「現在のサーバのURLにGETメソッドを使って送信、フォームのデータをURLに直接追加」。
+これにはいくつか欠点がある。
+
+- 送信されるデータサイズの制限（2000文字程度）
+- データをURLで直接見れてしまう（パスワードなどの漏洩）
+- ファイルのアップロードでは動作しない
+
+そのため、これらの制限を受けずデータをサーバに送信するため、`POST`メソッドを使うようにする。
+
+✅ `POST` はデータを送信するために最も一般的に使用される方法だが、いくつかの[特定の場合](https://www.w3.org/2001/tag/doc/whenToUseGet.html#checklist)は `GET` を使用するほうが望ましい。例えば、検索フィールドの実装。
+
+#### 実装
+
+登録フォームに `action` `method` を追加する。
+
+```html
+<form id="registerForm" action="//localhost:5000/api/accounts" method="POST">
+```
+
+登録フォームを利用して情報を送信してみる。
+すると、JSONレスポンスが表示される。(サーバにリダイレクトされちゃってるけど)
+
+![json-response](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/post-json-response.png?raw=true)
+なお、既存のユーザ名を入れたらちゃんとエラーを吐いた。
+![already-exist](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/user-already-exist.png?raw=true)
+
+### ページを再読み込みせずデータを送信する
+
+上で使用したアプローチには少し問題がある。
+フォームを送信するときサーバのURLにリダイレクトされること。
+
+ページのリロードを強制せずフォームデータをサーバに送信するために、JavaScriptを使用する。
+`<form>` の `action` にURLを記述する代わりに、`javascript:` で任意のJavaScriptコードを使用する。
+
+これを使う場合、これまでブラウザが自動的に行なっていた
+
+- フォームデータ取得
+- フォームデータを適切なフォーマットに変換、エンコードする
+- HTTPリクエストを作成してサーバに送信
+
+を自力で実装する必要がある。
+
+#### 実装
+
+```html
+<form id="registerForm" action="javascript:register()">
+```
+
+```js
+function register() {
+  const registerForm = document.getElementById('registerForm');
+  const formData = new FormData(registerForm);
+  const data = Object.fromEntries(formData);
+  const jsonData = JSON.stringify(data);
+}
+```
+
+やっていること
+
+- `getElementById` でフォーム要素取得
+- `FormData` を使ってフォームから**キー:値のペア**を取得
+- `[Object.fromEntries](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)` を使用してデータを**通常のオブジェクトに変換**
+    - キーと値の組み合わせのリストをオブジェクトに変換している
+- 最後に、データを**JSONにシリアライズ**
+    - シリアライズとは
+    > オブジェクトまたはデータ構造が、ネットワークまたはストレージ（例えば、[アレイバッファ](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)またはファイルフォーマット）上の転送に適したフォーマットに変換されるプロセス。
+    > たとえば [JavaScript](https://developer.mozilla.org/ja/docs/Glossary/JavaScript) では、`[JSON.stringify()](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)` [関数](https://developer.mozilla.org/ja/docs/Glossary/Function)を呼び出して、オブジェクトを [JSON](https://developer.mozilla.org/ja/docs/Glossary/JSON) [文字列](https://developer.mozilla.org/ja/docs/Glossary/String)にシリアライズできます。
+    > [Serialization - MDN](https://developer.mozilla.org/ja/docs/Glossary/Serialization)
+
+`createAccount` という関数を作成。
+
+```js
+async function createAccount(account) {
+  try {
+    const response = await fetch('//localhost:5000/api/accounts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: account
+    });
+    return await response.json();
+  } catch (error) {
+    return { error: error.message || 'Unknown error' };
+  }
+}
+```
+
+##### fetchAPIの利用
+
+JSONデータをサーバに送信するために`fetch`を使う。
+`fetch`は2つの引数を取る。
+
+- サーバのURL
+- リクエストの設定
+    - メソッドをPOSTに
+    - リクエストのための `body` を提供
+    - JSONをサーバに送りたいので、`Content-type` ヘッダを `application/json` に設定
+
+##### response.json
+
+サーバはリクエストに対してJSONで応答するので、`await response.json()`を使ってJSONの内容を解析し、結果のオブジェクトを返す。
+
+[`json` メソッド](https://developer.mozilla.org/ja/docs/Web/API/Response/json)は[`Response`オブジェクト](https://developer.mozilla.org/ja/docs/Web/API/Response)(Fetchのインターフェース、レスポンスを表す) の`body` を解析、JavaScriptのオブジェクトとして返す。
+
+#### 実装続き
+
+次に、`register`関数にコードを追加して`createAccount`を呼び出す。
+
+```js
+const result = await createAccount(jsonData);
+```
+
+ここでは`await`を利用しているので、`register`関数の前に`async`キーワードを追加する。
+最後に、結果を確認するためのログを追加する。
+
+最終的なコードは以下のようになる。
+
+```js
+async function register() {
+  const registerForm = document.getElementById('registerForm');
+  const formData = new FormData(registerForm);
+  const jsonData = JSON.stringify(Object.fromEntries(formData));
+  const result = await createAccount(jsonData);
+
+  if (result.error) {
+    return console.log('An error occured:', result.error);
+  }
+
+  console.log('Account created!', result);
+}
+```
+
+### データの検証
+
+ユーザ名を設定せず新規アカウントを登録しようとすると、サーバがエラーを返している事がわかる。
+
+サーバにデータを送信する前にフォームデータの検証を行い、有効なリクエストを送信していることを確認すると良い。HTMLフォームコントロールは、組み込みのバリデーションを複数提供している。
+
+> `required`: フィールドには入力する必要があります。そうでない場合は、フォームを送信することができません
+> `minlength` と `maxlength`: テキストフィールドの最小文字数と最大文字数を定義します
+> `min` と `max`: 数値フィールドの最小値と最大値を定義します
+> `type`: `number`, `email`, `file` や [その他の組み込み型](https://developer.mozilla.org/ja/docs/Web/HTML/Element/input) のような、期待されるデータの種類を定義します。この属性はフォームコントロールの視覚的なレンダリングを変更することもできます
+> `pattern`: これを使用すると、入力されたデータが有効かどうかをテストするための [正規表現](https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_Expressions) パターンを定義することができます
+> ヒント: CSS 疑似クラス `:valid`と `:invalid`を利用して、フォームコントロールの見た目を有効か無効かによってカスタマイズすることができます。
+#### 実装
+
+ユーザ名と通貨は必須フィールドで、その他は任意。
+
+`required`とフィールドのラベルのテキストの両方を使用する。
+
+```html
+<label for="user">Username (required)</label>
+<input id="user" name="user" type="text" required>
+...
+<label for="currency">Currency (required)</label>
+<input id="currency" name="currency" type="text" value="$" required>
+```
+
+ユーザの入力に対して制限をつける。
+
+```html
+<input id="user" name="user" type="text" maxlength="20" required>
+...
+<input id="currency" name="currency" type="text" value="$" maxlength="5" required>
+...
+<input id="description" name="description" type="text" maxlength="100">
+```
+
+サーバにデータを送信する前に実行されるバリデーションのことを**クライアントサイドのバリデーション**と呼ぶ。
+
+ただし、サーバにデータを送信せずに全てのチェックを実行できるとは限らないことに注意。例えば、サーバにリクエストを送らずに同じユーザ名のアカウントが存在するかどうかを確認することは出来ない。
+
+このようなサーバー上で実行される追加のバリデーションは**サーバーサイドのバリデーション**と呼ばれる。
+
+通常は両方を実装する必要がある。
+
+* クライアントサイドのバリデーションを使用するとUXが向上する。
+* サーバーサイドのバリデーションは操作するユーザデータが健全で安全であることを確認するため非常に重要。
+
+✅ [CodePen](https://codepen.io/search/pens?q=form)を利用して色々なformを見てみると良い。
+
+### スタイル設定する
+
+Before
+
+![style-default](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/style-default.png?raw=true)
+
+After
+
+![style-after](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/style-after.png?raw=true)
+
+- `flex`使用
+- `label` を小さく
+- 後どうすれば良いんだ・・・
+
+## 学んだこと
+
+* SPAの概要
+* `<template>`・`DocumentFragment`の利用
+* ルーティング、ナビゲーション
+* `popstate`イベントの利用
+* フォームとUIコントロール
+* サーバーへのデータ送信
+* クライアントサイドのバリデーション
