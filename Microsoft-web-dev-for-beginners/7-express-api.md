@@ -44,8 +44,8 @@ APIって何なんだ？感があったこともあり、
 > by [＠IT](http://www.atmarkit.co.jp/ait/articles/0703/13/news095.html)
 
 [Canvas API](https://developer.mozilla.org/ja/docs/Web/API/Canvas_API)など、MDNを見ていると「〇〇な機能を提供するAPI」という記述を見かけることが多くありました。
-その度に「APIって何なんだ・・・？」となっていたのですが、「複雑な処理を覆い隠して簡単に使えるようにしたもの」全般がAPIなんですね。
-関数みたいなものだと考えれば良いんでしょうか。
+その度に「APIって何なんだ・・・？」となっていたのですが、「複雑な処理を覆い隠して簡単に使えるようにしたもの」がAPIなんですね。
+**機能を提供する側⇔機能を利用したい側**をつなぐインターフェースというわけでしょうか。
 
 ### **WebAPI**
 
@@ -70,7 +70,11 @@ Web APIのうち、
 
 などの特徴を持つ、RESTに従い設計されたAPI
 
-## はじめに
+***
+
+ここからは教材の内容です。
+
+## イントロ
 
 このレッスンでは、あなた（私）はオンライン小売業者の開発者という設定。
 その小売業者は自社のアプリケーション用にHTTP APIのセットを作成している。アプリケーションはNode.js上に構築されている。
@@ -79,27 +83,26 @@ Web APIのうち、
 
 Node.jsにはWebアプリの構築を支援するHTTPと呼ばれるコアモジュールがあり、コンテンツを読み取り・書き込み・操作するための要求がサポートされている。
 
-このモジュールでは、Node.jsでHTTP要求を処理する方法を学習する。
-また、WebサイトとHTTP APIの構築に役立つExpressフレームワークについても学習する。
+このモジュールでは、**Node.jsでHTTP要求を処理する方法**を学習する。
+また、**WebサイトとHTTP APIの構築に役立つExpressフレームワーク**についても学習する。
 
-## 学習の目的
+### 学習の目的
 
 - WebフレームワークExpressの主要な概念について理解する。
 - 要求の処理方法を制御するためのミドルウェアを構成する。
 
-## Express フレームワークを使用して新しいWebアプリを作成
+## Expressを使用して新しいWebアプリを作成
 
 多くの場合、企業はファイルシステムやDBに大量のデータを格納する。
-
-そのデータにアクセスするには、HTTPを使用してWebアプリ・APIを利用する。
+ユーザがそのデータにアクセスするためには、Webアプリ・APIを利用する事が多い。
 
 WebアプリとAPIを構築する時に考慮する必要がある概念を次に示す。
 
-> **ルーティング**: アプリケーションは、URL アドレスの部分に基づいて、異なるセクションに分割されます。
-> **さまざまなコンテンツの種類のサポート**: 提供するデータは、プレーンテキスト、JSON、HTML、CSV などのさまざまなファイル形式で存在する場合があります。
-> **認証と承認**: データの中には、機密性が高いものもあります。 ユーザーがデータにアクセスするには、サインインするか、特定のロールまたはアクセス許可レベルを持っていることが必要になる場合があります。
-> **データの読み取りと書き込み**: 通常、ユーザーはシステムのデータの表示と、システムへのデータの追加の両方を行う必要があります。 データを追加するには、ユーザーは、フォームにデータを入力したり、ファイルをアップロードしたりします。
-> **製品化までの時間**: Web アプリケーションと API を効率的に作成するには、一般的な問題に対する解決策が提供されるツールとライブラリを選択します。 これらを選択することで、開発者はジョブのビジネス要件に可能な限り多くの時間を費やすことができるようになります。
+- **ルーティング** アプリケーションはURLアドレスに基づき、異なるセクションに分割される。
+- **さまざまなデータ形式のサポート** 提供するデータは、プレーンテキスト/JSON/HTML/CSVなど様々なファイル形式に対応している必要がある
+- **認証と認可** データの中には機密性の高いものもある。ユーザがデータにアクセスするために、サインインや特定のロール・アクセス許可レベルが必要になる場合がある。
+- **データの読み書き** 通常、ユーザはシステムのデータ表示/データの追加を両方行う必要がある。データを追加するには、　フォームにデータを入力したり、ファイルをアップロードしたりする。
+- **製品化までの時間** WebアプリとAPIを効率的に作成するには、適切なツール・ライブラリを選択する。
 
 ### Node.jsのHTTPモジュール
 
@@ -109,7 +112,7 @@ Node.jsには組み込みのHTTPモジュールがある。
 > **http.IncomingMessage**: このオブジェクトは、**http.Server** または **http.ClientRequest** によって作成される読み取り可能なストリームです。 状態、ヘッダー、データにアクセスするために使用します。
 > **http.ServerResponse**: このオブジェクトは、HTTP サーバーによって内部的に作成されるストリームです。 このクラスには、ヘッダーの種類や応答の内容など、どのような応答にする必要があるかが定義されています。
 
-### Webアプリの例
+#### Webアプリの例
 
 ```js
 const http = require('http');
@@ -133,6 +136,12 @@ server.listen(PORT, () => {
 > 2. **サーバー応答**: サーバーにおいて、応答する必要があるデータと応答ヘッダーを **res** オブジェクトに渡すことにより、応答が作成されます。
 > **要求のリッスンの開始**: ポートの指定時に **listen()** メソッドを呼び出します。 **listen()** を呼び出した後、作成したサーバーはクライアント要求を受け入れられる状態になります。
 
+#### リッスン
+
+> **[TCP/IP](https://e-words.jp/w/TCP-IP.html)**では、コンピュータ上で複数のプログラムが同時に異なる種類の通信ができるよう、**[ポート番号](https://e-words.jp/w/%E3%83%9D%E3%83%BC%E3%83%88%E7%95%AA%E5%8F%B7.html)**（port number）と呼ばれる識別番号が用意されている。外部からの接続を待ち受けて応答する**[サーバソフトウェア](https://e-words.jp/w/%E3%82%B5%E3%83%BC%E3%83%90%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2.html)**は、自分が通信したいポート番号をオペレーティングシステム（OS）に登録し、そのポートに接続要求があると通知を受けて処理を行う。
+> この動作のことを「ポートをリッスンする」のように表現し、そのようなプログラムのことを「**[リスナー](https://e-words.jp/w/%E3%83%AA%E3%82%B9%E3%83%8A%E3%83%BC.html)**」（listener：聞き手、聴取者）という。例えば、Webサーバは**[HTTP](https://e-words.jp/w/HTTP.html)**で通信を行うため、標準では**[TCP](https://e-words.jp/w/TCP.html)**の80番ポートをリッスンし、Webブラウザなどからアクセスされるのを待っている。
+> [リッスン - IT用語辞典](https://e-words.jp/w/%E3%83%AA%E3%83%83%E3%82%B9%E3%83%B3.html#:~:text=%E5%A4%96%E9%83%A8%E3%81%8B%E3%82%89%E3%81%AE%E6%8E%A5%E7%B6%9A%E3%82%92,%E8%81%9E%E3%81%8D%E6%89%8B%E3%80%81%E8%81%B4%E5%8F%96%E8%80%85%EF%BC%89%E3%81%A8%E3%81%84%E3%81%86%E3%80%82)
+
 #### 要するに
 
 `createServer` で `http.Server` のインスタンス作成。その時コールバック関数を渡す。
@@ -142,14 +151,7 @@ server.listen(PORT, () => {
 `req` はリクエスト。クライアントの要求を指す。
 `res` はレスポンス。サーバ側の動作として、応答の中身となるデータを `res` オブジェクトに渡すことでレスポンスを作成する。
 
-`listen` を呼び出すと、指定したポートを利用してサーバが作成、クライアントの要求を受けられる状態になる。
-
-#### リッスン
-
-> **[TCP/IP](https://e-words.jp/w/TCP-IP.html)**では、コンピュータ上で複数のプログラムが同時に異なる種類の通信ができるよう、**[ポート番号](https://e-words.jp/w/%E3%83%9D%E3%83%BC%E3%83%88%E7%95%AA%E5%8F%B7.html)**（port number）と呼ばれる識別番号が用意されている。外部からの接続を待ち受けて応答する**[サーバソフトウェア](https://e-words.jp/w/%E3%82%B5%E3%83%BC%E3%83%90%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2.html)**は、自分が通信したいポート番号をオペレーティングシステム（OS）に登録し、そのポートに接続要求があると通知を受けて処理を行う。
-> この動作のことを「ポートをリッスンする」のように表現し、そのようなプログラムのことを「**[リスナー](https://e-words.jp/w/%E3%83%AA%E3%82%B9%E3%83%8A%E3%83%BC.html)**」（listener：聞き手、聴取者）という。例えば、Webサーバは**[HTTP](https://e-words.jp/w/HTTP.html)**で通信を行うため、標準では**[TCP](https://e-words.jp/w/TCP.html)**の80番ポートをリッスンし、Webブラウザなどからアクセスされるのを待っている。
-> [リッスン - IT用語辞典](https://e-words.jp/w/%E3%83%AA%E3%83%83%E3%82%B9%E3%83%B3.html#:~:text=%E5%A4%96%E9%83%A8%E3%81%8B%E3%82%89%E3%81%AE%E6%8E%A5%E7%B6%9A%E3%82%92,%E8%81%9E%E3%81%8D%E6%89%8B%E3%80%81%E8%81%B4%E5%8F%96%E8%80%85%EF%BC%89%E3%81%A8%E3%81%84%E3%81%86%E3%80%82)
->
+`listen` を呼び出すと、指定したポートを利用してサーバが作成され、クライアントの要求を受けられる状態になる。
 
 ### ストリーム
 
@@ -165,11 +167,11 @@ req.on('data', (chunk) => {
 
 ・・・？？？
 
-ストリームがデータ構造で、データの読み取り/書き込み/イベント送受信ができること。
+* ストリームがデータ構造で、データの読み取り/書き込み/イベント送受信ができること。
+* `req` `res` はストリームであること。
+* `on` メソッドを使ってクライアントのリクエストをリッスンできること
 
-`req` `res` はストリームであること。
-
-`on` メソッドを使ってクライアントのリクエストをリッスンできることはわかりました。
+はわかりました。
 
 まず、用語を調べます。
 
@@ -180,6 +182,12 @@ req.on('data', (chunk) => {
 > プログラミングの分野では、データの入出力全般を扱う抽象的なオブジェクトやデータ型を意味する場合が多い。データが出入りする何らかの対象（メモリ領域やファイル、ネットワークなど）をプログラム中で扱えるように抽象化したもので、接続や切断、書き込みや読み込みなどを簡易な操作で行うことができる。
 > 通信ネットワークの分野では、データを送受信する際にデータ全体の受信完了を待たずに受信したデータから順番に処理を行う送受信方式（**[ストリーミング](https://e-words.jp/w/%E3%82%B9%E3%83%88%E3%83%AA%E3%83%BC%E3%83%9F%E3%83%B3%E3%82%B0.html)**）や、そのように送受信される連続的なデータの流れをストリームという。
 > [ストリーム - IT用語辞典](https://e-words.jp/w/%E3%82%B9%E3%83%88%E3%83%AA%E3%83%BC%E3%83%A0.html)
+
+そのままですが、
+
+**データが出入りする何か(メモリ領域、ファイル、ネットワーク等)を抽象化してプログラムで扱えるようにすることで、データの入出力操作を簡単にできるようにしたもの**
+
+という理解で良さそうです。
 
 何が利点なのか調べます。
 
@@ -192,6 +200,7 @@ req.on('data', (chunk) => {
 > ストリームは、Node.jsアプリケーションを強化する基本的な概念の1つです。
 > これらは、ファイルの読み取り/書き込み、ネットワーク通信、またはあらゆる種類のエンドツーエンドの情報交換を効率的な方法で処理する方法です。
 > ストリームはNode.jsに固有の概念ではありません。それらは数十年前にUnixオペレーティングシステムで導入され、プログラムはパイプ演算子を介してストリームを介して相互に対話できます（`|`）。
+
 > たとえば、従来の方法では、プログラムにファイルを読み取るように指示すると、ファイルは最初から最後までメモリに読み込まれ、その後処理されます。
 > ストリームを使用して、1つずつ読み取り、すべてをメモリに保持せずにコンテンツを処理します。
 
@@ -221,46 +230,81 @@ req.on('data', (chunk) => {
 
 #### Expressでのルート管理
 
-```bash
-http://localhost:3000/products
-```
+クライアントでWebアプリに対して要求を行う時は、特定のサーバーを指すアドレスであるURLを使用する。
+URLは次のようになる。
 
-このURLは、[http://localhost:3000](http://localhost:3000/products)(通常microsoft.comのようにドメイン名)と[/products](http://localhost:3000/products)(ルート)から構成されている。
+    http://localhost:3000/products
 
-Expressではルート管理にURL、ルート、HTTPメソッドを使用する。
+このURLは、
+`http://localhost:3000`(=自分自身のコンピュータを指す。なお、通常この位置はmicrosoft.comのようにドメイン名)と
+`/products`(=ルート)から構成されている。
 
-次の例では `GET` に関連付けられている `/product` が含まれるルートに対する要求を処理できる。
+Expressではルート管理に**URL、ルート、HTTPメソッド**が使用される。
+HTTPメソッドによりクライアントが行いたいことが記述され、ルートの登録・それらを適切なHTTPメソッドと組み合わせることでWebアプリを構成する。
+ExpressにはさまざまなHTTPメソッドを処理するための専用メソッドがあり、ルートをコードに関連付けるためのシステムが用意されている。
+
+次の例では`/product` が含まれるルートに対する`GET`要求を処理できる。
 
 ```js
 app.get('/products', (req, res) => {
   // handle the request
-}) 
+})
 ```
 
-#### 様々なコンテンツの提供
+#### 様々なデータ形式のサポート
 
 Expressでは、呼び出し元のクライアントに返すことが出来る様々なコンテンツ形式がサポートされている。
-
 `res` オブジェクトには、様々な種類のデータを返すためのヘルパー関数のセットが含まれている。
 
-プレーンテキストを返す
+- プレーンテキストを返す
 
 ```js
 res.send('plain text')
 ```
 
-JSONを返す
+- JSONを返す
 
 ```js
 res.json({ id: 1, name: "Catcher in the Rye" })
 ```
 
-上のExpressのコードは次のHTTPをモジュールのコードに相当する。
+上のExpressのコードは次のHTTPモジュールのコードに相当する。
 
 ```js
 res.writeHead(200, { 'Content-Type': 'application/json' });
 res.end(JSON.stringify({ id: 1, name: "Catcher in the Rye" }))
 ```
+
+`res.writeHead`
+
+参考 : [第4回 ＣＤＮの仕組み HTTPヘッダとは | REDBOX Labo](https://blog.redbox.ne.jp/what-is-cdn4.html)
+
+- ここでは、**ステータスコードとレスポンスのヘッダ**を書き込んでいる。
+- `200`は成功を意味するステータスコード。
+- `Content-type`は出力の[MIMEタイプ](https://developer.mozilla.org/ja/docs/Web/HTTP/Basics_of_HTTP/MIME_types)(後述)。
+
+`res.end`
+
+- HTTPレスポンスのプロセスを終了する関数。これがないと処理が正常に完了しない。
+- `send`にはHTTPレスポンスプロセスの終了処理が含まれるため、`end`は不要らしい。
+
+素のHTTPと比べてかなりスッキリ書ける事がわかりますね。
+
+##### Content-Type・MIMEタイプについて
+
+[MIMEタイプ](https://developer.mozilla.org/ja/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
+
+**Multipurpose Internet Mail Extensions または MIME タイプ**。
+
+ファイルの種類を表す概念として通常親しみがあるのは「拡張子」だと思います。
+ですが、Webの世界には文書・ファイル・バイト列の性質や形式を表す標準として、「MIMEタイプ」という概念もあるそうです。
+
+> MIME タイプはクライアントに対して、転送するドキュメントの種類を伝える機能です。ウェブにおいて、ファイル名の拡張子は意味を持ちません。従って、サーバーはそれぞれのドキュメントと共に正しい MIME タイプを転送するよう適切に設定することが重要です。ブラウザーはたいてい MIME タイプを、読み込んだリソースに対して行う既定のアクションを決めるために使用します。
+
+**参考**
+
+[Web開発者向けの重要なMIMEタイプ - MDN](https://developer.mozilla.org/ja/docs/Web/HTTP/Basics_of_HTTP/MIME_types#important_mime_types_for_web_developers)
+[MIMEタイプってなんだ？ - Qiita](https://qiita.com/NoxGit/items/6808bf539ce8fb713532)
 
 ## 実装 Expressを使用して基本的なWebアプリを作成
 
@@ -271,32 +315,32 @@ res.end(JSON.stringify({ id: 1, name: "Catcher in the Rye" }))
 3. ターミナルで「**npm install express**」と入力。 Express フレームワークがインストールされる。
 4. **package.json** ファイルを開くと、 **dependencies** セクションに、**express** というエントリがある。 このエントリは、Express フレームワークがインストールされていることを意味する。
 5. 次のコードを **app.js** に追加。
-    
+
     ```js
     const express = require('express');
     const app = express();
     const port = 3000;
-    
+
     app.get('/', (req, res) => res.send('Hello World!'));
     app.listen(port, () => console.log(`Example app listening on port ${port}!`));
     ```
-    
-    上のコードでは、**express()** を呼び出すことによってExpress アプリのインスタンスが作成されている。
-    
-    - ルートが **/** に設定されている。
-    
+
+    上のコードでは、**`express()`** を呼び出すことによってExpress アプリのインスタンスが作成されている。
+
+    - ルートが `/` に設定されている。
+
     ```js
     app.get('/', (req, res) => res.send('Hello World!'));
     ```
-    
-    - **listen()** メソッドを呼び出して Web アプリケーションを開始。
-    
+
+    - **`listen()`** メソッドを呼び出して Web アプリケーションを開始。
+
     ```js
     app.listen(port, () => console.log(`Example app listening on port ${port}!`));
     ```
-    
-6. ターミナルで、次のコマンドを実行して Web アプリケーションを開始します。
-    
+
+6. ターミナルで次のコマンドを実行して Web アプリケーションを開始する。
+
     ```bash
     node app.js
     ```
@@ -307,11 +351,13 @@ res.end(JSON.stringify({ id: 1, name: "Catcher in the Rye" }))
     Example app listening on port 3000!
     ```
     
-7. ブラウザーを開き、**http://localhost:3000** に移動。 ブラウザに**Hello World!** というテキストが表示されればOK。
+7. ブラウザーを開き、`http://localhost:3000` に移動。 ブラウザに**Hello World!** というテキストが表示されればOK。
 
 ![Screenshot 2022-02-12 13.15.59.png](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/hello-world.png?raw=true)
 
-### JSONを返すWebアプリを作成
+### 実装 JSONを返すWebアプリ
+
+新しいルートを追加し、JSONを返す。
 
 1. `app.js` に以下を追加。
 
@@ -377,7 +423,7 @@ OK。
 **ライフサイクル :** 始まり〜終わりまで、誕生〜消滅までを指す。
 
 場合によっては要求がWebアプリに到達した時、ユーザがログインしていること、または特定のリソースの表示を許可されていることを確認する必要がある。
-ミドルウェアと呼ばれる仕組みを用いて実装していく。
+その仕組みを**ミドルウェア**を用いて実装していく。
 
 ### 要求の手順
 
@@ -386,22 +432,115 @@ OK。
 リソース処理のためにユーザがログインする必要がある場合、手順は次のようになる。
 
 1. **要求前** ユーザが要求ヘッダーを使用して適切な資格情報を送信したか調べる。資格情報が検証された場合は次のステップに要求を送信。
-2. **応答を作成** DBやエンドポイントなど、何らかの種類のデータソースと通信する。リクエストででリソースが適切に要求されていれば、このステップでリソースが返される。
+2. **応答を作成** DBやエンドポイントなど、何らかの種類のデータソースと通信する。リクエストでリソースが適切に要求されていれば、このステップでリソースが返される。
 3. **要求後** 省略可能。ログ記録など。
 
 Expressにはこの方法で要求を処理出来るメソッドが組み込まれている。
 
-要求前後の処理は”ミドルウェア”と呼ばれ、次のようになる。
+要求前後の処理は**ミドルウェア**と呼ばれ、次のようになる。
 
 ```js
 app.use((req, res, next) => {})
 ```
 
+Expressのインスタンス化されたオブジェクトで`use`メソッドを実装する。
 引数の意味は以下。
 
-- **req**: このパラメーターは、受信した要求です。 これには、要求ヘッダーと呼び出し元の URL が含まれます。 また、要求でクライアントからデータが送信された場合は、データの本体が含まれることがあります。
-- **res**: このパラメーターは応答ストリームです。 このストリームを使用して、呼び出し元のクライアントに送信するヘッダーやデータなどの情報を書き込みます。
-- **next**: このパラメーターでは、要求に問題がないこと、およびそれを処理する準備ができていることが通知されます。 **next()** が呼び出されない場合、要求の処理は停止します。 また、要求が処理されない理由をクライアントに通知することをお勧めします。たとえば、**res.send('')** を呼び出します。
+> - **req**: このパラメーターは、受信した要求です。 これには、要求ヘッダーと呼び出し元の URL が含まれます。 また、要求でクライアントからデータが送信された場合は、データの本体が含まれることがあります。
+> - **res**: このパラメーターは応答ストリームです。 このストリームを使用して、呼び出し元のクライアントに送信するヘッダーやデータなどの情報を書き込みます。
+> - **next**: このパラメーターでは、要求に問題がないこと、およびそれを処理する準備ができていることが通知されます。 **next()** が呼び出されない場合、要求の処理は停止します。 また、要求が処理されない理由をクライアントに通知することをお勧めします。たとえば、**res.send('')** を呼び出します。
+
+### ミドルウェアとは結局何か
+
+よくわかっていないので追加で調査します。
+
+**参考**
+[Express ミドルウェアの使用](https://expressjs.com/ja/guide/using-middleware.html)
+[Express 4.x - API リファレンス](https://expressjs.com/ja/4x/api.html)
+
+この記事、面白いしわかりやすいです。
+[expressは一体何をしとるんじゃ・・・ - Qiita](https://qiita.com/ganyariya/items/85e51e718e56e7d128b8)
+
+#### ミドルウェアとは
+
+ミドルウェアは、`req`と`res`を受け取り、任意の処理を行う関数のことです。
+`next`にはミドルウェア関数の次に実行したいコールバックを登録します。
+
+「Expressは一連のミドルウェア関数の呼び出し」と言われるように、
+次のミドルウェアへの処理を継続するリクエスト/レスポンスサイクルをそこで終了させる
+のいずれかを行います。
+
+> (req, res, next ) => {行いたい処理}
+>　･･･これがよく、app.getやapp.postなどに記述されるミドルウェア関数なのじゃあ！
+
+> ```js
+> app.get('/', (req, res, next) => {
+>    res.render('home.hbs',{
+>        pageTitle:'Welcome to My ホームページ',
+>        titleName:'タイトルなんやで'
+>    })
+> })
+> ```
+>
+>　上記のような感じで、出て来るはずなのじゃあ･･･
+>　reqは「request」の略で、クライアントからのHTTPリクエストに関する情報が格納されているのじゃあ･･･
+>　resは「response」の略で、クライアントに送り返すHTTPの情報が格納されているのじゃあ･･･
+>　nextは、このミドルウェア関数の次に実行したいコールバック関数が入っているのじゃあ！これはapp.useで設定した関数が格納されているらしいのじゃ･･･
+>　　注意点としては、app.useで設定したミドルウェア関数をどんどん連続で実行させたいときは、そのミドルウェア関数の中で必ずnext();と、next関数を実行しないといけないのじゃ！
+>　この記述がないとコールバックが実行されないので、途中で処理が止まってしまうらしいのじゃ･･･
+
+`next`は、リクエスト/レスポンスサイクルを継続。
+先程ちらっと出てきた`end`や`send`は、リクエスト/レスポンスサイクルをそこで終了させていたんですね。
+
+#### `app = express()`
+
+読み込んだExpressモジュールをインスタンス化しています。
+慣習的に`app`という名前にするそうです。
+#### `app.use`
+
+構文は`app.use([path,] callback [, callback...])`。
+
+**指定されたミドルウェア関数を指定されたパスで使用できるようにする**メソッドです。
+[path]のデフォルトは`/`。
+そのため、pathを指定せずに実装したミドルウェアは、アプリへのリクエストごとに実行されます。
+
+[path]に`/user`と記述すると、`/user`リクエストがあった際に実行されるミドルウェア関数を設定できます。
+
+`app.use`で設定した順でミドルウェア関数が実行されるので注意。
+
+#### `app.METHOD`
+
+`app.get`など、GET, PUT, POSTなどのリクエストのHTTPメソッドを小文字で表します。
+`app.get`の場合、特定のルートに対してGET要求があった時に実行する処理を定義出来ます。
+
+#### 例
+
+後々でてくるコードですが、何がしたいのかがわかりやすいです。
+
+`app.get`(要求処理)は`isAuthorized`(要求前の処理)を第2引数として受け取り、
+パスワードが正しければ`next`により次の処理に進みます。
+パスワードが間違っていれば`res`のステータスコードをエラーに設定、メッセージを送ってレスポンスサイクルを終了させます。
+
+```js
+function isAuthorized(req,res, next) {
+  const auth = req.headers.authorization;
+  if (auth === 'secretpassword') {
+    next();
+  } else {
+    res.status(401);
+    res.send('Not permitted');
+  }
+}
+
+app.get('/users', isAuthorized, (req,res) => {
+  res.json([{
+    id: 1,
+    name: 'User Userson'
+  }])
+  })
+```
+
+なんとなく理解出来たので、次に進みます。
 
 ## 実装 要求のライフサイクルを管理する
 
@@ -409,13 +548,13 @@ app.use((req, res, next) => {})
 
 ほとんどのアプリは誰でもアクセス出来る部分と保護されている部分が存在する。アプリを保護するには様々な方法があるが、この演習ではExpressを使って簡単な保護システムを実装する。
 
-1. まず、次のコマンドを実行して**[https://github.com/MicrosoftDocs/node-essentials](https://github.com/MicrosoftDocs/node-essentials)** のリポジトリをクローン。
+1. まず、次のコマンドを実行して[https://github.com/MicrosoftDocs/node-essentials](https://github.com/MicrosoftDocs/node-essentials)のリポジトリをクローン。
     
     ```bash
     git clone https://github.com/MicrosoftDocs/node-essentials
     ```
     
-2. npmパッケージをインストール。
+2. クローンしたリポジトリに移動して、npmパッケージをインストール。
     
     ```bash
     npm install
@@ -446,10 +585,12 @@ app.use((req, res, next) => {})
     
     app.listen(port, () => console.log(`Example app listening on port ${port}!`))
     ```
-    
+
+    ルート `/`、`/users`、`/products`に対する処理が記述されている。
+
     ```js
     const http = require('http');
-    
+
     http.get({
       port: 3000,
       hostname: 'localhost',
@@ -468,11 +609,10 @@ app.use((req, res, next) => {})
       });
     });
     ```
-    
-    **http://localhost:3000/users**に接続した後、**chunk**、**end**、**close**などのイベントをリッスンする。 
-    
-    クライアントを使用して、サーバー アプリケーションが期待どおりに動作することを確認する。
-    
+
+    `http://localhost:3000/users`に接続した後、**chunk**、**end**、**close**などのイベントをリッスンして処理を行う。
+
+
 4. `node app.js` を実行し、サーバーアプリケーションを実行。
 5. `node client.js` を実行し、クライアントを実行。
     
@@ -501,7 +641,7 @@ app.use((req, res, next) => {})
     
 7. `app.js` の `get` 部分を置き換え
     
-    `isAuthorized` が2番目の引数として渡されている。
+    `isAuthorized` を2番目の引数として渡す。
     
     ```js
     app.get('/users', isAuthorized, (req,res) => {
@@ -541,24 +681,87 @@ app.use((req, res, next) => {})
     No more data
     Closing connection
     ```
-    
-    実際には、この例より更に堅牢にする必要がある。
-    
-    Railsチュートリアルで触れたため割愛するが、
-    
-    ハッシュ化(一方向関数により暗号化)したパスワードをDBに保存し、
-    
-    DBのハッシュ化されたダイジェスト⇔ユーザの入力したパスワードをハッシュ化して等しければOK、など。
-    
 
-なお、JSONデータを含むPOSTER要求の処理には、 `app.user(bodyParser.json())` を使う。
+    実際には、この例より更に堅牢にする必要がある。
+
+    ハッシュ化(一方向関数により暗号化)したパスワードをDBに保存し、
+    DBのハッシュ化されたダイジェスト⇔ユーザの入力したパスワードをハッシュ化して等しければOK、など。
+
+### httpモジュール
+
+唐突すぎる`require('http')`・・・
+調べます。
+
+**参考**
+[HTTP | Node.js v17.5.0 Documentation](https://nodejs.org/api/http.html)
+
+[公式](https://nodejs.org/api/http.html#httprequestoptions-callback)によると、以下の書き方はどうやら`http.request(options[, callback])`という構文のようです。
+今回使用しているoptionsは以下です。
+
+> * `headers` `<Object>` An object containing request headers.
+> * `hostname` `<string>` Alias for host. To support url.parse(), hostname will be used if both host and hostname are specified.
+> * `method` `<string>` A string specifying the HTTP request method. Default: 'GET'.
+> * `path` `<string>` Request path. Should include query string if any. E.G. '/index.html?page=12'. An exception is thrown when the request path contains illegal characters. Currently, only spaces are rejected but that may change in the future. Default: '/'.
+> * `port` `<number>` Port of remote server. Default: defaultPort if set, else 80.
+
+```js
+http.get({
+  port: 3000,
+  hostname: 'localhost',
+  path: '/users',
+  headers: {}
+}
+```
+
+レスポンスのデータは、`res.on` + イベント名の指定により受け取ります。
+
+イベントについては[http.ClientRequest](https://nodejs.org/api/http.html#class-httpclientrequest)に詳細が記載されています。
+
+また、[http.ClientRequest](https://nodejs.org/api/http.html#httprequestoptions-callback)が、[http.request](https://nodejs.org/api/http.html#httprequestoptions-callback)から返されるオブジェクトであり、
+
+> The only difference between this method and http.request() is that it sets the method to GET and calls req.end() automatically.
+> http.request()との唯一の違いは、メソッドをGETに設定し、req.end()を自動的に呼び出す点です。
+
+↑の記述から、[http.get](https://nodejs.org/api/http.html#httpgetoptions-callback)も`http.ClientRequest`を返す事がわかります。（おそらく）
+
+`http.ClientRequest`からレスポンスを取得するには、requestオブジェクトに`response`リスナーを追加します。`response`イベントでは、レスポンスオブジェクトにリスナーを追加することが出来ます。
+
+レスポンスオブジェクトのデータは、`data`ハンドラ呼び出し、`resume`メソッド呼び出しなどにより消費する必要があります。
+データを消費しないと`end`イベントが発生しません。
+また、データが読み込まれるまではメモリを消費するので、最終的には'process out of memory' エラーになる可能性があります。
+
+コードを再掲します。
+`options`で色々と指定、`data`、`end`などのイベント発生時に処理を行っていることがわかります。
+
+```js
+const http = require('http');
+
+http.get({
+  port: 3000,
+  hostname: 'localhost',
+  path: '/users',
+  headers: {}
+}, (res) => {
+  console.log("connected");
+  res.on("data", (chunk) => {
+    console.log("chunk", "" + chunk);
+  });
+  res.on("end", () => {
+    console.log("No more data");
+  });
+  res.on("close", () => {
+    console.log("Closing connection");
+  });
+});
+```
 
 ### まとめ
 
-- APIとは外部のWebサービスが提供している機能(関数みたいなもの)をHTTP通信経由で利用する事ができるもの。
+- WebAPIとは外部のWebサービスが提供している機能(関数みたいなもの)をHTTP通信経由で利用する事ができるもの。
 - APIに対してはブラウザ/コード/cRULなどのクライアントを利用して要求を送信出来る。
-- APIを叩くとレスポンスが返ってくる。だいたいJSON。
+- APIを叩くとレスポンスが返ってくる。JSONであることが多い。
 - Node.jsのHTTPコアモジュールを使って要求を処理する方法を学んだ。
 - ExpressなどのWebフレームワークを利用する利点を学んだ。
 - Expressでは、ルート管理、ファイルのアップロード/ダウンロードの処理、異なる種類の応答の作成、などの処理を実装出来る。
-- Expressにより認証情報のログ記録・操作などのタスクを実行する事で、要求のライフサイクルを管理できる。
+- ミドルウェアにより要求前後の処理を登録、認証情報のログ記録・操作などのタスクを実行する事で、要求のライフサイクルを管理できる。
+- HTTPモジュール、Express等のドキュメントをそこそこ読んだ。少しだけ読み方がわかった気がする。
