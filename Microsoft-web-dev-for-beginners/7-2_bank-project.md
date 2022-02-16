@@ -1,3 +1,8 @@
+<!--
+title : MicrosoftのWeb開発教材を使ってみた ⑦-2銀行プロジェクト【ログイン/データ管理/状態管理】
+tags : API 初心者
+-->
+
 ## はじめに
 
 **「Web Development For Beginners」**というMicrosoftがGithubに公開している教材についての記事です。
@@ -113,7 +118,8 @@ https://flexboxfroggy.com/#ja
 [⑤-1ブラウザ拡張機能 【ブラウザの仕組み/拡張機能作成の導入】](https://qiita.com/NasuPanda/items/d0189565d039c2c11383)
 [⑤-2ブラウザ拡張機能 【API/LocalStorage/BackGround/Performance】](https://qiita.com/NasuPanda/items/4186e6701cd2d4d68bb2)
 [⑥スペースシューティングゲーム 【ゲーム開発の基礎/Pub-Sub/Canvas/衝突検出】](https://qiita.com/NasuPanda/items/16ffb297be9b862d2785)
-**⑦架空銀行プロジェクト【ログイン/データ管理/状態管理】　本記事**
+⑦-1銀行プロジェクト【SPA/'<template>'/HTMLフォーム】()
+**⑦-2銀行プロジェクト【ログイン/データ管理/状態管理】　本記事**
 
 ***
 

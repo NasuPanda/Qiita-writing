@@ -705,7 +705,6 @@ OK。
 その中で、プログラムでサーバーAPIにデータを送信する方法、ユーザ入力の基本的な検証ルールを定義する方法を見ていく。
 
 銀行アプリのサーバーAPIは既に用意されているので、それを利用する。
-銀行APIはNode.js+Expressで構築されている。
 
 [銀行APIの詳細](https://github.com/microsoft/Web-Dev-For-Beginners/blob/main/7-bank-project/api/translations/README.ja.md)
 
@@ -722,9 +721,10 @@ curl http://localhost:5000/api
 # -> "Bank API v1.0.0"ならOK
 ```
 
+銀行APIはNode.js+Expressで構築されています。
 以下の記事でAPIの概要とNode.js+Expressを使った簡単なAPI構築について触れています。
 
-⭐要更新⭐
+https://qiita.com/NasuPanda/items/5c0e4946ab177545f577
 
 ### フォームとコントロール
 
