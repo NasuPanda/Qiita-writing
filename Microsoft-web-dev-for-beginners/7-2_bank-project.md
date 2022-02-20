@@ -1074,7 +1074,7 @@ async function createAccount(account) {
 
 `solution`をチラ見してみると、 `title` の更新部分の処理で `routes` のプロパティを利用していました。
 
-```jsx
+```js
 const routes = {
     '/login': { templateId: 'login', title: "Login" },
     '/dashboard': { templateId: 'dashboard', title: "Account info", init: updateDashboard }
@@ -1092,3 +1092,556 @@ document.title = route.title;
     - [メディアクエリー　ガイド](https://developer.mozilla.org/ja/docs/Web/CSS/Media_queries#%E3%82%AC%E3%82%A4%E3%83%89)
     - レスポンシブデザインにするために使われるようです。
 
+***
+
+## 状態管理の概念
+
+### イントロ
+
+Webアプリの規模が大きくなるにつれて、当然ながらすべてのデータの流れを追うことは難しくなる。
+
+どこでデータを取得し、どのページがデータを消費し、どこでいつ更新する必要があるのか・・・
+
+メンテナンスが難しい厄介なコードになりがち。
+
+これは、アプリの異なるページ感でデータを共有する必要がある場合(ユーザデータなど)に特に当てはまる。
+
+このパートでは、**状態の管理方法**を再考するために構築したアプリを見ていく。**任意の時点でのブラウザの更新**をサポートし、**ユーザセッション間でのデータの永続化**を可能にする。
+
+### 状態管理を再考する
+
+現在は、ログインしているユーザの銀行データを含むグローバル変数 `account` を使ってアプリの状態を管理している。
+
+現状、以下の問題がある。
+
+- ブラウザをリフレッシュするとログインに戻るため、**状態は保持されない**。
+- **状態を変更する関数が複数**ある。アプリが大きくなるにつれて、変更の追跡が難しくなり、更新を忘れがちになる。
+- **状態がリセットされない。**Logoutをクリックしてもログインページになってもアカウントデータが残っている。
+
+ここでの問題の本質は、**データの流れがわかりにくい**こと。
+
+- データフローをわかりやすく保つには？
+- データフローを理解しやすい状態に保つには？
+
+これらの問題が解決した時、他の問題は既に解決されているか、簡単に解決できるようになっている。
+
+ここでは、**データとそれを変更する方法**を集中化することで構成される、一般的な解決策を採用する。
+
+![state-management]([https://github.com/microsoft/Web-Dev-For-Beginners/raw/main/7-bank-project/4-state-management/images/data-flow.png](https://github.com/microsoft/Web-Dev-For-Beginners/raw/main/7-bank-project/4-state-management/images/data-flow.png))
+
+> https://raw.githubusercontent.com/microsoft/Web-Dev-For-Beginners/main/7-bank-project/4-state-management/images より
+
+SAMパターン、Reduxについて調べてみる。
+
+**SAMパターン**
+
+![SAM](https://github.com/Westen0511/Qiita-writing/blob/main/Microsoft-web-dev-for-beginners/images/SAM.jpeg?raw=true)
+
+> 構成要素
+> Model
+> Actionから受け取った計算結果をpresent関数でStoreに送り、現在の状態を更新する。
+> 状態が変化することでViewが更新される。
+> 現在の状態を保持する(FluxのStore)。
+> 永続化の責務も持つ。
+
+> Action
+> データを受け取り、そのデータをもとに状態計算をする関数。
+> 計算結果は、present関数を介してModelへ送りこまれる。
+> ActionはView(ユーザー操作)とState(NAP ※後述)から発火される。
+
+> State
+> Modelから受け取ったデータを元にViewで必要となるデータに変換を行う関数。
+> モデルの全てがViewに影響する訳ではなく、またViewの形がモデルと一致する訳でもないので、Stateを介して見通しを整える。
+> 現在のModelの状態を見て、次に発火する必要のあるActionを呼び出す。これをNAP（Next-Action-Predicate）という。（ex. Modelが持つtimeが0になった時、Modelの状態を見て自動的にTimeUp!と表示する）
+
+参考
+
+- [SAMパターンの大雑把な理解](https://izumisy.work/entry/2017/10/14/184229)
+- [【SAM】ゲーマー諸君、コントローラを棄ててアクションを起こせ！MVCのCが消えて、Actionが残った理由 - ゲーム脳でもわかるMVC 本論](https://qiita.com/sasanquaneuf/items/2926555c9f4e7230b84f)
+- [Flux, Redux, SAMのデータフローをざっくり理解する](https://qiita.com/aimy-07/items/e252ff3be2f4e7fdc9f5)
+
+**Redux**
+
+状態管理へのアプローチを持つライブラリは多くあるが、[Redux](https://redux.js.org/)は人気の選択肢の一つ。
+
+- Reactが扱うUIの状態を管理するためのフレームワーク。
+- 3原則を持つ。
+    1. **Single source of truth**アプリケーション内でStoreは1つだけ。
+    2. **State is read-only**stateを直接変更することはできない。Actionをstoreへdispatch(送信)することでしかstateは変更できない。
+    3. **Mutations are written as pure functions**Reducer(stateを変更する関数)は純粋関数(同じ入力値を渡すたび、決まって同じ出力値が得られる関数)でなければならない。
+
+#### 実装
+
+ `account` 宣言を `state` に置き換える。
+
+```js
+let account = null;
+```
+
+```js
+let state = {
+  account: null
+};
+```
+
+これにより、1つの `state` オブジェクトに全てのデータの状態を集中させることになる。
+
+### データ変更の追跡
+
+データ保存のために `state` オブジェクトを配置したので、次のステップは**更新を一元化**すること。
+目的は、「いつ変更があったのか」、「いつ変更が発生したのか」簡単に把握できるようになること。
+
+ここでは、 `state` オブジェクトを不変にする。
+
+これはまた、何かを変更したい場合には新しい `state` を作成する必要があることを意味する。
+
+このようにすることで、望ましくない副作用への保護、デバッグを容易にする、などのメリットを得ることが出来る。
+
+JavaScriptでは、[Object.freeze](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze) を使って不変オブジェクトを作ることが出来る。
+
+#### 浅い凍結
+
+[浅い凍結とは - MDN](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze#what_is_shallow_freeze)
+
+`Object.freeze(object)` を呼び出した結果は`object`の直属のプロパティにのみ適用される。
+
+```js
+const employee = {
+  name: "Mayank",
+  designation: "Developer",
+  address: {
+    street: "Rohini",
+    city: "Delhi"
+  }
+};
+
+Object.freeze(employee);
+
+employee.name = "Dummy"; // 非 strict モードでは暗黙に失敗
+employee.address.city = "Noida"; // 子オブジェクトの属性は変更できる
+
+console.log(employee.address.city) // 出力: "Noida"
+```
+
+オブジェクトを真に不変にするには、オブジェクト型のプロパティを**再帰的に凍結(深い凍結)させる**必要がある。
+
+凍結させてはいけない `window` のようなオブジェクトを凍結させる危険性があることに注意。
+
+#### 実装
+
+```js
+function updateState(property, newData) {
+  state = Object.freeze({
+    ...state,
+    [property]: newData
+  });
+}
+```
+
+この関数では、新しい `state` オブジェクトを作成し、`...`を使用して前のステートからデータをコピーしている。
+
+次に、`[property]`を使用して `state` の特定のプロパティを新しいデータでオーバーライドする。
+
+最後に、`Object.freeze`を使用してオブジェクトをロック、変更を防ぐ。
+
+また、 `state` の初期化を更新、初期状態も凍結されるようにする。
+
+```js
+let state = Object.freeze({
+  account: null
+});
+```
+
+それに伴い `login` `register` を更新。
+
+```js
+// register
+updateState('account', result);
+
+// login
+updateState('account', data);
+```
+
+新しい関数 `logout` を作成し、ユーザがLogoutをクリックした時にアカウントデータがクリアされない問題を修正する。
+
+```js
+function logout() {
+  updateState('account', null);
+  navigate('/login');
+}
+```
+
+##### [スプレッド構文](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Spread_syntax#spread_in_object_literals)
+
+> スプレッド構文は、オブジェクトや配列のすべての要素を何らかのリストに入れる必要がある場合に使用することができます。
+
+```js
+> state
+{ key: 'v', key2: 'v2', key3: 'v3' }
+
+# オブジェクトに展開
+> state = {...state, "key4": "v4"}
+{ key: 'v', key2: 'v2', key3: 'v3', key4: 'v4' }
+```
+
+##### ブラケット表記
+
+[オブジェクトでの作業 - MDN](https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Working_with_Objects#objects_and_properties)
+
+```js
+//ブラケット記法
+const obj = new Object();
+const propertyName = "01" ;
+obj[propertyName] = "テスト"; 
+console.log(obj);  // Object { 01="テスト"}
+
+//ドット記法
+const obj = new Object();
+obj.01 = "テスト";       //SyntaxError
+console.log(obj.0123);　 //SyntaxError
+```
+
+> JavaScript 識別子として有効ではないプロパティ名 (例えば空白やダッシュを含んでいたり、数字で始まったりするプロパティ名) には、ブラケット (角括弧) 表記法でのみアクセスできます。この表記法はプロパティ名を動的に決める場合 (プロパティ名が実行時に決まる場合) に便利です。
+
+**プロパティ名に変数を使いたい**場合、動的にプロパティ名を変更してアクセスしたい場合などにブラケット記法が有効。
+
+### 状態を維持する
+
+ほとんどのWebアプリでは、データを保持しておかないと正常に動作しない。
+
+すべての重要なデータは通常、**DBに保存**され、サーバーAPIをを介してアクセスされる。
+
+しかし、より良いUXやパフォーマンス向上のため、ブラウザ上で実行されている**クライアントアプリのデータを永続化する**ことも選択肢に上がる。
+
+ブラウザにデータを永続化する場合、いくつか重要な点がある。
+
+- **データは機密性の高いものか？** ユーザパスワードなどの機密性の高いデータをクライアントに保存することは避けるべき。
+- **データをどのくらい保存する必要がある？** このデータにアクセスするのは現在のセッションのためだけ？それとも永遠に保存する？
+
+Webアプリ内のデータを保存する方法は目的に応じて複数ある。
+
+例えば、URLを使用して検索クエリを保存し、ユーザー間で共有できるようにすることが出来る。
+
+また、**認証情報**のように、データをサーバーと共有する必要がある場合は、**HTTPクッキー**を使用することも出来る。
+
+もう一つの選択肢は、データを保存するためのブラウザAPIを利用すること。
+
+- **[localStorage](https://developer.mozilla.org/ja/docs/Web/API/Window/localStorage)** : **異なるセッション**にまたがって現在のWebサイトに固有のデータを永続化することが出来る。[Key-Valueストア](https://e-words.jp/w/KVS.html)。
+- **[sessionStorage](https://developer.mozilla.org/ja/docs/Web/API/Window/sessionStorage)** : 保存されたデータは**セッションの終了時**(ブラウザが閉じられた時)に消去される。
+
+これらのAPIはどちらも**文字列しか**保存できない。
+
+複雑なオブジェクトを格納したい場合、 `JSON.stringify` を使って `JSON` 形式にシリアライズする必要がある。
+
+✅ サーバーで動作しないWebアプリを作成したい場合、 `IndexedDB` API を使ってクライアント上にDBを作成することも可能。
+
+#### 実装
+
+ユーザが明示的にLogoutボタンをクリックするまではログインしたままにしたい。
+そのため、`localStorage`を使ってアカウントデータを保存する。
+
+まず、データを保存するためのキーを定義する。
+
+```js
+const storageKey = "savedAccount";
+```
+
+そして、 `updateState` に以下を追加。
+
+```js
+localStorage.setItem(storageKey, JSON.stringify(state.account));
+```
+
+`state`によりすべての状態の更新を一元化していたため、ユーザーアカウントのデータは永続化され、常に最新の状態になる。
+
+データを保存したので、アプリが読み込まれた時に復元されるようにする。
+
+```js
+function init() {
+  const savedAccount = localStorage.getItem(storageKey);
+  if (savedAccount) {
+    updateState('account', JSON.parse(savedAccount));
+  }
+
+  // 今までの初期化コード
+  window.onpopstate = () => updateRoute();
+  updateRoute();
+}
+
+init();
+```
+
+保存されたデータを取得、もしあればそれに応じて状態を更新する。
+
+ページの更新時に状態に依存するコードがあるかもしれないので、ルートを更新する前にこの処理を行うことが重要。
+
+アカウントデータを保持しているため、**ダッシュボードページをアプリケーションのデフォルトページに**することも出来る。
+
+具体的には、`updateRoute`を以下のように変更する。
+
+```js
+/** HTMLテンプレートの表示を更新する */
+function updateRoute() {
+    const path = window.location.pathname;
+    const route = routes[path];
+    // 変更箇所
+    if (!route) return navigate('/dashboard');
+```
+
+もしもデータが見つからなければ、ダッシュボード → ログインページにリダイレクトするようになっているため問題ない。
+
+### データの更新
+
+`test` アカウントを使ってダッシュボードに行き、ターミナルで以下のコマンドを実行して新しいトランザクションを作成する。
+
+```jsx
+curl --request POST \
+     --header "Content-Type: application/json" \
+     --data "{ \"date\": \"2020-07-24\", \"object\": \"Bought book\", \"amount\": -20 }" \
+     http://localhost:5000/api/accounts/test/transactions
+```
+
+この状態でダッシュボードのページを更新してみても、新しいトランザクションは表示されない。この状態は`localStorage`により無期限に保持されるが、ログアウトして再ログインするまで更新されない。
+
+この問題を修正するために考えられる戦略の1つは、ダッシュボードがロードされる度にアカウントデータをリロードすること。
+
+#### 実装
+
+`updateAccountData` を作成する。
+
+```jsx
+async function updateAccountData() {
+  const account = state.account;
+  if (!account) {
+    return logout();
+  }
+
+  const data = await getAccount(account.user);
+  if (data.error) {
+    return logout();
+  }
+
+  updateState('account', data);
+}
+```
+
+現在ログインしているかをチェックし、サーバからアカウントデータをリロードする。
+
+`refresh` を作成する。
+アカウントデータを更新し、ダッシュボードページのHTMLを更新する処理を行う。
+
+```jsx
+async function refresh() {
+  await updateAccountData();
+  updateDashboard();
+}
+```
+
+最後に、ルート定義を更新する。
+
+```jsx
+const routes = {
+  '/login': { templateId: 'login' },
+  '/dashboard': { templateId: 'dashboard', init: refresh }
+};
+```
+
+これで、ダッシュボードをリロードすると更新されたアカウントデータが表示される。
+
+### 課題 「トランザクションの追加」ダイアログの実装
+
+> - ダッシュボードページに「トランザクションの追加」ボタンを追加します
+> - HTML テンプレートで新しいページを作成するか、JavaScript を使用してダッシュボード・ページを離れることなくダイアログの HTML を表示/非表示にするかのいずれかを選択します (そのためには `[hidden](https://developer.mozilla.org/ja/docs/Web/HTML/Global_attributes/hidden)` プロパティを使用するか、CSS クラスを使用することができます)
+> - ダイアログの[キーボードとスクリーンリーダーのアクセシビリティ](https://developer.paciellogroup.com/blog/2018/06/the-current-state-of-modal-dialog-accessibility/) が適切であることを確認します
+> - 入力データを受け取るための HTML フォームを実装します
+> - フォームデータから JSON データを作成して API に送ります
+> - ダッシュボードページを新しいデータで更新します
+
+#### トランザクションの追加ボタン
+
+```html
+<button>Add Transaction</button>
+```
+
+#### ダイアログのHTML実装
+
+[HTMLElement.hidden - MDN](https://developer.mozilla.org/ja/docs/Web/API/HTMLElement/hidden)
+
+`true` のときに要素はビューから隠される。`false` のときは要素が見える。
+
+表示/非表示を考える前に、まずフォームを実装する。
+
+```html
+<section id="transactionDialog" class="dialog">
+    <div class="dialog-content">
+        <h2 class="text-center">Add transaction</h2>
+        <form id="transactionForm">
+        <label for="date">Date</label> 
+        <input id="date" name="date" type="date" required>
+        <label for="object">Object</label> 
+        <input id="object" name="object" type="text" maxlength="50" required>
+        <label for="amount">Amount (use negative value for debit)</label> 
+        <input id="amount" name="amount" type="number" value="0" step="any" required>
+        <div id="transactionError" class="error" role="alert"></div>
+        <div class="dialog-buttons">
+            <button>Cancel</button>
+            <button>OK</button>
+        </div>
+        </form>
+    </div>
+</section>
+```
+
+ひとまず `template` の中に配置。
+
+CSSを実装する・・・
+
+が、何をしていいかわからないので `solution` を参照。
+
+```css
+.dialog {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    top: 0;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    animation: slideFromTop 0.3s ease-in-out;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+@keyframes slideFromTop {
+from {
+    top: -300px;
+    opacity: 0;
+}
+to {
+    top: 0;
+    opacity: 1;
+}
+}
+```
+
+- `display: none` 非表示に
+- `position` ~ `top` 位置の調整
+- `overflow: auto;` [overflow - MDN](https://developer.mozilla.org/ja/docs/Web/CSS/overflow)　要素のオーバーフロー時、すなわち要素の内容が多すぎる時の動作。
+    - `auto` はあふれる場合スクロールバーを表示
+- `animation` 、`@keyframes`によりアニメーション実装
+#### JavaScript実装
+
+```jsx
+function addTransaction() {
+    const dialog = document.getElementById('transactionDialog');
+    dialog.classList.add('show');
+
+    // リセット
+    const transactionForm = document.getElementById('transactionForm');
+    transactionForm.reset();
+
+    // 日付のセット
+    transactionForm.date.valueAsDate = new Date();
+}
+```
+
+```css
+.dialog.show {
+    display: flex;
+}
+```
+
+[Element.classList - MDN](https://developer.mozilla.org/ja/docs/Web/API/Element/classList)
+
+[HTMLFormElement.reset - MDN](https://developer.mozilla.org/ja/docs/Web/API/HTMLFormElement/reset)
+
+- `dialog` に `show` クラスを加えることで表示。
+- `reset` によりフォーム要素をリセット
+
+```jsx
+/** POST トランザクション */
+async function createTransaction(user, transaction) {
+    return sendRequest('/accounts/' + user + '/transactions', 'POST', transaction);
+}
+```
+
+- `/accounts/user/transactions` に POST。
+- [銀行API](https://github.com/microsoft/Web-Dev-For-Beginners/tree/main/7-bank-project/api)を参照。
+
+| POST /api/accounts/:user/transactionsAdd a transaction | ex: { date: '2020-07-23T18:25:43.511Z', object: 'Bought a book', amount: -20 } |
+| --- | --- |
+
+```jsx
+async function confirmTransaction() {
+    const dialog = document.getElementById('transactionDialog');
+    dialog.classList.remove('show');
+
+    const transactionForm = document.getElementById('transactionForm');
+
+    const formData = new FormData(transactionForm);
+    const jsonData = JSON.stringify(Object.fromEntries(formData));
+    const data = await createTransaction(state.account.user, jsonData);
+
+    if (data.error) {
+        return updateElement('transactionError', data.error);
+    }
+
+    // ローカルの状態 更新
+    const updateAccount = {
+        ...state.account,
+        balance: state.account.balance + data.amount,
+        transactions: [...state.account.transactions, data]
+    }
+    updateState('account', updateAccount);
+
+    // 表示の更新
+    updateDashboard();
+}
+```
+
+- `show` クラスを除去して非表示に。
+- フォームデータ取り出し→オブジェクトに変換→JSONでにシリアライズ
+- `createTransaction` を呼び出し、データをPOST
+- 状態・表示の更新
+
+```jsx
+async function cancelTransaction() {
+    const dialog = document.getElementById('transactionDialog');
+    dialog.classList.remove('show');
+}
+```
+
+- キャンセルされた場合`show`を除去して非表示に
+
+```jsx
+<button type="button" class="button-alt" onclick="cancelTransaction()" formnovalidate>Cancel</button>
+<button onclick="confirmTransaction()">OK</button>
+```
+
+- `require` が設定された状態でもキャンセル出来るように、 `formnonvalidate` を使用。
+    - [MDN](https://developer.mozilla.org/ja/docs/Web/HTML/Element/form#:~:text=%E3%81%8C%E5%8F%AF%E8%83%BD%E3%81%A7%E3%81%99%E3%80%82-,novalidate,-%E3%83%95%E3%82%A9%E3%83%BC%E3%83%A0%E3%82%92%E9%80%81%E4%BF%A1)
+
+## 学んだこと
+
+* データの取得
+* データを利用して表示を更新する
+*  データの永続化
+*  **データとそれを変更する方法**を統一、集中化することでワークフローがわかりやすくなる
+*  ページを表示する前にユーザデータの存在を確認することで、ユーザに合わせて表示することが出来る
+
+## 教材全体を通して
+
+- 楽しかった。
+- どのようなアプローチで実装していけば良いのか、概要くらいはつかめた。
+- 解説があっさりしている箇所が多く、曖昧な点を自分で調査することが多かった → ドキュメント読みの練習になった。
+- ❎ 途中から完走することが目的になっていた
+    - 学ぶためというより、完走するためにとにかく進める形になっていた。
+    - 記事もまとめというより、やったことの羅列になってしまっている。
+- ✅ 今後
+    - 教材の完走にこだわらず、合わないと思ったら辞めても良い。
+      - この教材自体はやった価値があったと思う。
+    - 記事の粒度や内容をもう少し考える。重要だと思った点をまとめる、実装の解説/考え方の解説に重点を置く、など。
+    - HTML/CSSについてはまだまだ0から書ける気がしないので、色々作ってみる。
