@@ -1,15 +1,12 @@
 ## はじめに
 
 HTML/CSS/JavaScriptで10個(くらい)何かを作ってみるチャレンジの一環として、
-〇〇していきます。
-
-リポジトリは以下です。
-
-https://github.com/Westen0511/My-10-Web-Dev-Projects
+Web上でJSONをCSVに変換出来るツールを作っていきます。
 
 ### 目的
 
-**HTML/CSS/JavaScriptを使ってとりあえずなにか作ること。手を動かすこと。**
+何か作ってみるチャレンジの目的は、
+**HTML/CSS/JavaScriptを使ってとりあえずなにか作ること。手を動かすこと**です。
 
 これでは曖昧すぎるので、もう少し深掘ります。
 
@@ -22,7 +19,7 @@ https://github.com/Westen0511/My-10-Web-Dev-Projects
 なぜ厳しいのか？を考えた時に、Pythonとの違いは**手を動かしているかどうか**だなと思いました。
 
 プログラミングにおいて手を動かすに勝る学習方法はないと思います。
-実感としてもそうですし、色々な方がそうおっしゃっています。
+実感としてもそうですし、そう言っているエンジニアの方も多く感じます。
 
 また、質を高めるためにも、まずは絶対的な量が必要とよく言います。
 
@@ -43,3 +40,11 @@ https://github.com/Westen0511/My-10-Web-Dev-Projects
 
 - [ポートフォリオに役立つJavaScriptプロジェクト40選（動画あり） - Qiita](https://qiita.com/baby-degu/items/33acb94e404feaf58d35)
 - [JavaScript 30](https://javascript30.com/)
+
+***
+
+このチャレンジのリポジトリ
+
+https://github.com/Westen0511/My-10-Web-Dev-Projects
+
+***
