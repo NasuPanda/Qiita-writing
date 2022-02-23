@@ -1,12 +1,12 @@
-## はじめに
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　## はじめに
 
 HTML/CSS/JavaScriptで10個(くらい)何かを作ってみるチャレンジの一環として、
-指定時間自然音を流すことでお昼寝を補助するツールを作っていきます。
+お昼寝用BGM＆アラームツールを作っていきます。
 
 ### 目的
 
 何か作ってみるチャレンジの目的は、
-**HTML/CSS/JavaScriptを使ってとりあえずなにか作ること。手を動かすこと**です。
+**HTML/CSS/Vanilla JSを使ってとりあえずなにか作ること、手を動かすこと**です。
 
 これでは曖昧すぎるので、もう少し深掘ります。
 
@@ -14,9 +14,11 @@ HTML/CSS/JavaScriptで10個(くらい)何かを作ってみるチャレンジの
 
 * HTML/CSS/JavaScriptについて、コードを見ればなんとなく理解出来る。
 * チュートリアルと一緒に進めれば何かは作れる。
-* 0から何か作ろうと思うと厳しい。Pythonの場合はある程度出来る。
+* 0から何か作ろうと思うと厳しい。
+    * Python(業務効率化などで使用)の場合はある程度出来る。
 
-なぜ厳しいのか？を考えた時に、Pythonとの違いは**手を動かしているかどうか**だなと思いました。
+なぜ厳しいのか？を考えた時に、
+Pythonとの違いは**実際に手を動かしているかどうか**だなと思いました。
 
 プログラミングにおいて手を動かすに勝る学習方法はないと思います。
 実感としてもそうですし、そう言っているエンジニアの方も多く感じます。
@@ -27,19 +29,19 @@ HTML/CSS/JavaScriptで10個(くらい)何かを作ってみるチャレンジの
 
 ### ルール
 
-- 期間は３~４週間くらい。
-  - 数を稼ぐために適当になったら本末転倒なので、時間が足りない場合延長する。
-- 「何か」の基準は自分の中で人様に見せれるレベルのもの。
+- 期間は３週間くらい。
+- 数は10個くらい。
 - お題はパクリでもOK。
   - ただし、教材に従って進めるだけ、はNG。アイデアは持ってきてもいいし参考にするのは良いが、まずは自分で考える。
 - 人のコードを参考にしても良いが、ただのコピペはNG。何をしているのか理解すること。
 
 ### 参考
 
-面白そうなお題やネタ切れになった時に参考にします。
+以下から面白そうなお題をいくつか参考にします。
 
 - [ポートフォリオに役立つJavaScriptプロジェクト40選（動画あり） - Qiita](https://qiita.com/baby-degu/items/33acb94e404feaf58d35)
 - [JavaScript 30](https://javascript30.com/)
+
 
 ***
 
@@ -101,7 +103,7 @@ Keynoteで簡単なモックアップを作成しました。
 
 [`<audio>`](https://developer.mozilla.org/ja/docs/Web/HTML/Element/audio)を使えば良さそう。
 
-```jsx
+```js
 <audio
     controls
     src="/media/cc0-audio/t-rex-roar.mp3">
@@ -454,7 +456,7 @@ select {
 
 ここでは `input` イベントを使います。
 
-```jsx
+```js
 const minutesSlider = document.getElementById("minutes")
 const secondsSlider = document.getElementById("seconds")
 const bgmVolumeSlider = document.getElementById("bgm-volume")
@@ -499,7 +501,7 @@ OKですね。
 
 そこで、対応関係のクラスを作ってみます。
 
-```jsx
+```js
 class CorrespondenceInputRangeNumber {
     constructor(inputRange, inputNumber) {
         this.inputRange = inputRange;
@@ -535,7 +537,7 @@ OKですね。
 
 そこで、 `range` `number` の関係はオブジェクトで表すことにしました。
 
-```jsx
+```js
 /** input⇔分タイマーの紐付け */
 const correspondenceInputMinutesTimer = {
     "timer" : document.getElementById("timer-minutes"),
@@ -555,7 +557,7 @@ const correspondenceInputSecondsTimer = {
 
 `number` は入力欄に値が表示されるので、 `padStart` で0埋めしておきます。
 
-```jsx
+```js
 function correspondInputTimer(correspond) {
     // numberは値が表示されるため、0埋めしておく
     correspond.number.value = correspond.number.value.padStart(2, "0");
@@ -587,7 +589,7 @@ correspondInputTimer(correspondenceInputSecondsTimer);
 
 構文は以下。
 
-```jsx
+```js
 str.padStart(targetLength [, padString])
 ```
 
@@ -618,7 +620,7 @@ str.padStart(targetLength [, padString])
 
 HTMLに `select` を使用、カスタムデータ属性を指定したので、以下のように取り出します。
 
-```jsx
+```js
 let index = natureSelect.selectedIndex
 console.log(natureSelect.options[index].dataset.bgm)
 
@@ -627,7 +629,7 @@ console.log(natureSelect.options[index].dataset.bgm)
 
 変更が確定した時に取得出来ればいいので、 `change` イベントを使います。
 
-```jsx
+```js
 // ------------------------------------------
 // 音の選択
 // ------------------------------------------
@@ -679,7 +681,7 @@ HTMLを以下のように書いたため、 `bgm-*` `alarm-*` という形で先
 <audio src="assets/Alarm/morning.mp3" id="alarm-morning"></audio>
 ```
 
-```jsx
+```js
 const selectedAudio = document.getElementById(`nature-${selectedBGM}`)
 console.log(`bgm-${selectedBGM}`, selectedAudio)
 
@@ -697,7 +699,7 @@ console.log(`bgm-${selectedBGM}`, selectedAudio)
 
 BGM/アラームの音量チェックから実装していきます。
 
-```jsx
+```js
 function play(audio, volume) {
     audio.volume = volume;
     audio.play();
@@ -732,7 +734,7 @@ function playVolumeCheck(audioId) {
 
 `button` の `disabled` を利用して再生中はボタンを無効にします。
 
-```jsx
+```js
 // 音量チェック
 const bgmCheck = document.getElementById("bgm-volume-check");
 const alarmCheck = document.getElementById("alarm-volume-check");
@@ -784,7 +786,7 @@ alarmCheck.addEventListener('click', () => { playVolumeCheck("alarm", volumeChec
 
 まず、タイマーの表示を時間の経過とともに更新出来るようにします。
 
-```jsx
+```js
 const start = function() {
     let min = correspondenceInputMinutesTimer.number.value
     let sec = correspondenceInputSecondsTimer.number.value
@@ -815,7 +817,7 @@ startBtn.addEventListener("click", start)
 
 最初は以下のように、引数として `input` の値を渡していました。
 
-```jsx
+```js
 startBtn.addEventListener("click", start.bind(null,
                                         correspondenceInputMinutesTimer.number.value,
                                         correspondenceInputSecondsTimer.number.value,
@@ -846,7 +848,7 @@ startBtn.addEventListener("click", start.bind(null,
 
 また、ストップが押された時に `input` の値が更新されるようにします。
 
-```jsx
+```js
 /** タイマーの入力値をセットする */
 function setTimerInputs(min, sec) {
     correspondenceInputMinutesTimer.number.value = String(min).padStart(2, "0");
@@ -862,7 +864,7 @@ function setTimerInputs(min, sec) {
 
  `audio` を `play` `pause` する関数を作ります。
 
-```jsx
+```js
 /** audio要素をplayし、ボタンを無効化する */
 function audioPlay(audio, volume) {
     audio.volume = volume;
@@ -883,7 +885,7 @@ function audioPause(audio) {
 
 短時間再生する関数を作ります。
 
-```jsx
+```js
 /** 一定時間再生する。 */
 function audioPlayShort(audio, volume) {
     audioPlay(audio, volume);
@@ -895,7 +897,7 @@ function audioPlayShort(audio, volume) {
 
 `bind` で `this` の参照先を固定しておきます。
 
-```jsx
+```js
 /** 選択された音声のHTML要素 */
 const selectedSounds = {
     "bgm" : document.getElementById("bgm-fire"),
@@ -921,7 +923,7 @@ alarmSelect.addEventListener("change", selectSound.bind(alarmSelect, "alarm"));
 
 再生時無効にするHTML要素を追加します。
 
-```jsx
+```js
 /** 再生時無効にするHTML要素 */
 const elementsDisabledPlayback = [
                                 startBtn, bgmVolumeCheck, alarmVolumeCheck,
@@ -934,7 +936,7 @@ const elementsDisabledPlayback = [
 
 スタートボタンが押された時に `start` から再生・タイマー制御・停止を呼び出します。
 
-```jsx
+```js
 function start() {
     // 1. 初期化
     let min = correspondenceInputMinutesTimer.number.value
@@ -997,7 +999,7 @@ button:disabled {
 
 そして、ストップボタンの強調/強調の除去を実装します。
 
-```jsx
+```js
 function start() {
     // 1. 初期化
     let min = correspondenceInputMinutesTimer.number.value
@@ -1023,7 +1025,7 @@ OKですね。
 
 音量チェックを実行する関数を書くと、以下のようになりました。
 
-```jsx
+```js
 /** 音量チェックを一定時間再生する。 */
 function playVolumeCheck(audioId) {
     const selectedAudio = selectedSounds[audioId];
@@ -1042,7 +1044,7 @@ function playVolumeCheck(audioId) {
 
 という使い方ができます。
 
-```jsx
+```js
 bgmVolumeCheck.addEventListener('click', playVolumeCheck.bind(null, "bgm"))
 alarmVolumeCheck.addEventListener('click', playVolumeCheck.bind(null, "alarm"))
 ```
@@ -1055,7 +1057,7 @@ alarmVolumeCheck.addEventListener('click', playVolumeCheck.bind(null, "alarm"))
 
 元となるオブジェクトを作ってそれぞれコピーした方が良いとは思いますが、今回はオブジェクトが2つしかないので・・・
 
-```jsx
+```js
 /** input⇔分タイマーの対応 */
 const correspondenceInputMinutesTimer = {
     "timer" : document.getElementById("timer-minutes"),
@@ -1091,7 +1093,7 @@ const correspondenceInputSecondsTimer = {
 
 他にも色々とリファクタリングして、最終的に以下のようになりました。
 
-```jsx
+```js
 /** 選択された音声のHTML要素 */
 const selectedSounds = {
     "bgm" : document.getElementById("bgm-fire"),
