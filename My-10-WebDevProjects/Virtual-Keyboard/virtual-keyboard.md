@@ -25,6 +25,33 @@
 
 コレくらいしか思いつかないな・・・
 
+# 仮想キーボード
+
+## 概要
+
+下の動画を参考にして、画面上で操作出来る仮想キーボードを実装していく。
+
+[https://www.youtube.com/watch?v=N3cq0BHDMOY](https://www.youtube.com/watch?v=N3cq0BHDMOY)
+
+### 主な目的
+
+- 仮想キーボードの作り方を学ぶ
+- 仮想キーボードのように複雑なレイアウトをどのように実現するのか学ぶ
+- コードの書き方を参考にする
+
+### **完成イメージ**
+
+[https://codepen.io/dcode-software/pen/KYYKxP](https://codepen.io/dcode-software/pen/KYYKxP)
+
+### **必要な要素**
+
+現時点で必要そうな要素を考えてみます。
+
+- キーイベントに反応して値を出力
+- キーイベントに反応してアニメーション
+
+コレくらいしか思いつかないな・・・
+
 ## HTML実装
 
 早速実装していきます。
@@ -38,7 +65,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> Virtual Keyboard HTML/CSS/JS</title>
-    <link rel="stylesheet" href="assets/dcode.css">
     <link rel="stylesheet" href="assets/keyboard.css">
     <link rel="shortcut icon" href="assets/favicon.ico">
 </head>
@@ -60,9 +86,9 @@
 
 `textarea` に対してインラインCSSを書き、スタイルを割り当てます。
 
-[Google Material icon](https://google.github.io/material-design-icons/)を使っていくようです。
+特殊なキーの表現には[Google Material icon](https://google.github.io/material-design-icons/)を使っていくようです。
 
-HTMLに以下を追加して使えるようにします。
+HTMLにリンクを追加して使えるようにします。
 
 ```html
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
@@ -71,21 +97,23 @@ HTMLに以下を追加して使えるようにします。
 
 本来キーボード部分はJavaScriptで作りますが、今は存在しません。
 
-CSS編集のために、ダミーHTMLを作って行きます。
-
-```html
-<div class="keyboard">
-    <div class="keyboard__keys">
-
-    </div>
-</div>
-```
+CSS編集のために、ダミーのHTMLを作って行きます。
 
 キーボードのコンテナと、キーボード用の `div` を作ります。
 
-**VSCode上で `.keyboard__keys` と打つと自動的に `div class="keyboard__keys"` が生成されます。**
+**VSCodeのHTMLファイル編集時、 `.keyboard__keys` と打つと自動的に `div class="keyboard__keys"` が生成されます。**
 
 初めて知りました。
+
+そして、その中にキーボード（ `button type="button"` ）を入れていきます。
+
+```jsx
+<div class="keyboard">
+  <div class="keyboard__keys">
+      <button type="button" class="keyboard__key">a</button>
+  </div>
+</div>
+```
 
 ## CSS実装
 
@@ -108,25 +136,51 @@ CSS編集のために、ダミーHTMLを作って行きます。
 
 `position: fixed`
 
-スクロールしてもキーボードが表示され続けるようにする
+スクロールしてもキーボードが表示され続けるようにする。
 
 `padding: 5px 0;`
+
+[padding - CSS: カスケーディングスタイルシート | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/padding)
 
 一括指定。この場合は左右5px、上下0。
 
 `background-color: #004134;`
 
-何気なく使っていた色指定ですが、D codeと言うらしいです。
+背景色の指定。
 
 `box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);`
 
-✅　要調査
+[box-shadow - CSS: カスケーディングスタイルシート | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/box-shadow)
+
+以下のような構文で使用します。
+
+`blur-radius` は値が大きくなるほどぼかしが大きくなり、**影の面積が広く・色が薄く**なります。
+
+```css
+/* キーワード値 */
+box-shadow: none;
+
+/* offset-x | offset-y | color */
+box-shadow: 60px -16px teal;
+
+/* offset-x | offset-y | blur-radius | color */
+box-shadow: 10px 5px 5px black;
+
+/* offset-x | offset-y | blur-radius | spread-radius | color */
+box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+
+/* inset | offset-x | offset-y | color */
+box-shadow: inset 5em 1em gold;
+
+/* 複数の影はカンマで区切る */
+box-shadow: 3px 3px red, -1em 0 0.4em olive;
+```
 
 `user-select: none;`
 
-ユーザーが選択出来ないように
+[user-select - CSS: カスケーディングスタイルシート | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/user-select)
 
-✅要調査
+ユーザーのテキスト範囲選択を禁止します。
 
 `transition: bottom 0.4s;`
 
@@ -317,4 +371,429 @@ HTMLにアイコン、クラスを追加します。
 
 capslockのライトを実装します。
 
-動画17分時点。
+`keyboard__key--activatable` というクラスを持つcapslockキーを実装し、以下のスタイルを追加します。
+
+```css
+.keyboard__key--activatable::after {
+    content: "";
+    top: 10px;
+    right: 10px;
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 50%;
+}
+```
+
+絶対位置指定で親(キーボード)の右上に配置し、スタイルを与えます。
+
+また、 `keyboard__key--active` を追加、ライトをアクティブにできるようにします。
+
+```css
+.keyboard__key--active::after {
+    background : #08ff00;
+}
+```
+
+暗いキーは以下のように実装。
+
+```css
+.keyboard__key--dark {
+    background: rgba(0, 0, 0, 0.5);
+}
+```
+
+## JavaScript実装
+
+### Keyboardオブジェクト
+
+```jsx
+const Keyboard = {
+    elements: {
+        main: null,
+        keysContainer: null,
+        keys: []
+    },
+
+    eventHandlers: {
+        oninput: null,
+        onclose: null
+    },
+
+    properties: {
+        // キーボードの入力
+        value: "",
+        capsLock: false
+    }
+};
+```
+
+キーボードを表すために必要な`Keyboard`オブジェクトを定義していきます。
+
+ 
+
+`elements`
+
+メイン要素(キーボード)、キーボードのコンテナ、それぞれのキー
+
+`eventHandlers`
+
+イベントハンドラー
+
+`properties`
+
+キーボードの入力値、capsLockのアクティブ状態
+
+また、このオブジェクトは以下のメソッドを持ちます。
+
+<aside>
+✅ `_` から始まるメソッドはプライベートメソッドです。
+
+</aside>
+
+```jsx
+init() {
+
+},
+_creatKeys() {
+
+},
+_triggerEvent(handlerName) {
+    console.log("Event Triggered! Event Name:" + handlerName);
+},
+_toggleCapsLock() {
+    console.log("Caps Lock Toggled!");
+},
+open(initialValue, oninput, onclose) {
+
+},
+close() {
+
+}
+```
+
+`open`には`、initialVale` を渡します。
+
+これは、 `textarea` に既に入力があった場合、その入力をスタート値にするためです。
+
+### `init`
+
+全てのDOMがロードされたときをトリガーに `init` を実行します。
+
+✅ load との違いは？
+
+[Window: DOMContentLoaded イベント - Web API | MDN](https://developer.mozilla.org/ja/docs/Web/API/Window/DOMContentLoaded_event)
+
+```jsx
+// 全てのDOMがロードされた時
+window.addEventListener("DONContentLoaded", function() {
+    Keyboard.init();
+})
+```
+
+```jsx
+init() {
+        // main要素を作成
+        this.elements.main = document.createElement("div");
+        this.elements.keysContainer = document.createElement("div");
+
+        // main要素をセットアップ
+        this.elements.main.classList.add("keyboard", "1keyboard--hidden");
+        this.elements.keysContainer.classList.add("keyboard__keys");
+
+        // DOMの追加
+        this.elements.main.appendChild(this.elements.keysContainer);
+        document.body.appendChild(this.elements.main);
+    },
+```
+
+`elements` に生成したDOM要素を代入、 `document` に `appendChild` していく。
+
+なるほど、オブジェクトに生成した要素を持たせる感じなんですね。
+
+`keyboard--hidden` の頭に1をつけているのは、開発用(開発中は見えるようにしておく)だから。
+
+こういった小技は勉強になりますね。
+
+### `_createKeys`
+
+`DocumentFlagment` を使ってHTML要素を追加していきます。
+
+`DocumentFlagment` は仮想的なDOMツリーを生成するようなイメージで使います。
+
+主に大量の要素を一気に追加したい時なんかに使います。
+
+```jsx
+_creatKeys() {
+    const fragment = document.createDocumentFragment();
+    const keyLayout = [
+        "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "backspace",
+        "q", "w", "e", "r", "t", "y", "u", "i", "o", "p",
+        "caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", "enter",
+        "done", "z", "x", "c", "v", "b", "n", "m", ",", ".", "?",
+        "space"
+    ];
+
+    const createIconHTML = (icon_name) => {
+        return `<i class="material-icons>${icon_name}</i>`
+    }
+
+    keyLayout.forEach(key => {
+        const keyElement = document.createElement("button");
+        const insertLineBreak = ["backspace", "p", "enter", "?"].indexOf(key) !==-1;
+
+        // 属性/クラスを追加
+        keyElement.setAttribute("type", "button");
+        // 全てのキーに必要なクラス
+        keyElement.classList.add("keyboard__key");
+
+```
+
+#### 列区切り
+
+```jsx
+const insertLineBreak = ["backspace", "p", "enter", "?"].indexOf(key) !==-1;
+
+...
+
+if(insertLineBreak) {
+	fragment.appendChild(document.createElement("br"));
+            }
+```
+
+キーボードの列区切りは`indexOf` を使って判定、 `<br>` タグで改行を入れることで表現します。
+
+[String.prototype.indexOf() - JavaScript | MDN](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/String/indexOf)
+
+`indexOf` は見つからなければ `-1` を返すので、見つかった場合は `inserLineBreak` が `true` になります。
+
+#### 特殊なキー
+
+`switch-case` を使います。
+
+```jsx
+switch(key) {
+    case "backspace":
+        keyElement.classList.add("keyboard__key--wide");
+        keyElement.innerHTML = createIconHTML("backspace");
+
+        keyElement.addEventListener("click", () => {
+            this.properties.value = this.properties.value.substring(0, this.properties.length - 1);
+            this._triggerEvent("oninput");
+        })
+        break;
+
+    case "caps":
+        keyElement.classList.add("keyboard__key--wide", "keyboard__key--activatable");
+        keyElement.innerHTML = createIconHTML("keyboard_capslock");
+
+        keyElement.addEventListener("click", () => {
+            this._toggleCapsLock();
+            keyElement.classList.toggle("keyboard__key--active", this.properties.capsLock);
+        })
+        break;
+
+    case "enter":
+        keyElement.classList.add("keyboard__key--wide");
+        keyElement.innerHTML = createIconHTML("keyboard_return");
+
+        keyElement.addEventListener("click", () => {
+            this.properties.value += "\n";
+            this._triggerEvent("oninput");
+        })
+        break;
+
+    case "space":
+        keyElement.classList.add("keyboard__key--extra--wide");
+        keyElement.innerHTML = createIconHTML("space_bar");
+
+        keyElement.addEventListener("click", () => {
+            this.properties.value += " ";
+            this._triggerEvent("oninput");
+        })
+        break;
+
+    case "done":
+        keyElement.classList.add("keyboard__key--wide", "keyboard--dark");
+        keyElement.innerHTML = createIconHTML("check_circle");
+
+        keyElement.addEventListener("click", () => {
+            this.close();
+            this._triggerEvent("onclose");
+        })
+        break;
+```
+
+やっていることは単純で、
+
+- 必要なクラスとアイコンを追加
+    - アイコンの生成は専用の関数を作っておいて、それを利用します。
+- クリックされた時の処理を登録
+
+しているだけです。
+
+#### backspace
+
+`substring` を使って1文字削除しています。
+
+##### caps
+
+`toggle` を使ってアクティブにします。
+
+[DOMTokenList.toggle](https://developer.mozilla.org/ja/docs/Web/API/DOMTokenList/toggle)は渡された `token` をリストから削除、 `false` を返します。
+
+`token` が存在しなかった場合は、追加して `true` を返します。
+
+##### done
+
+入力終了を表すキーです。
+
+`close` を呼びます。
+
+#### 通常のキー
+
+```jsx
+	default:
+	keyElement.textContent = key.toLowerCase();
+	
+	keyElement.addEventListener("click", () => {
+		this.properties.value += this.properties.capsLock ? key.toUpperCase() : key.toLowerCase();
+		this._triggerEvent("oninput");
+	})
+	break;
+```
+
+三項演算子を使って`capsLock` がアクティブなら大文字に、そうでなければ小文字にします。
+
+これでキーボードが完成・・・
+
+![innerHTML-miss.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/7a1e8e6a-a822-48ae-896d-06db2e87831f/innerHTML-miss.png)
+
+あれ。
+
+`innerHTML` だけ空で、 `createIcon` などの関数は正常に動いているように見えたのでそこそこ解決に時間がかかってしまいましたが、
+
+```jsx
+const createIconHTML = (icon_name) => {
+    return `<i class="material-icons>${icon_name}</i>`;
+}
+```
+
+`material-icons` の `”` が足りていないだけでした。
+
+補完頼りはよくないですね・・・
+
+その他クラス名を間違えていてスタイルが適用されていない箇所などあったので修正しました。
+
+結果が以下です。
+
+![innerHTML-ok.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/30c8b37e-ead8-4dc6-be85-db948a4b8aae/innerHTML-ok.png)
+
+OKですね。
+
+### capslockがONになったときの挙動
+
+```jsx
+this.elements.keys = this.elements.keysContainer.querySelectorAll(".keyboard__key");
+```
+
+`capslock` による制御で使うために、 `Keyboard.keys` に全てのキー要素を追加します。
+
+通常のキーはアイコンを持たない→子要素を持たない
+
+ことを利用して、表示を更新します。
+
+```jsx
+_toggleCapsLock() {
+	  console.log("Caps Lock Toggled!");
+	  this.properties.capsLock = !this.properties.capsLock;
+	
+	  for (const key of this.elements.keys) {
+	      if(key.childElementCount === 0) {
+	          key.textContent = this.properties.capsLock ? key.textContent.toUpperCase() : key.textContent.toLowerCase();
+	      }
+	  }
+	}
+```
+
+三項演算子は今回のように**ある入力を元にして値がスイッチする場合**に便利そうですね。
+
+### イベントの制御
+
+```jsx
+_triggerEvent(handlerName) {
+        console.log("Event Triggered! Event Name:" + handlerName);
+
+        if(typeof this.eventHandlers[handlerName] == "function") {
+            this.eventHandlers[handlerName](this.properties.value);
+        }
+    },
+```
+
+`_triggerEvent` に渡された引数が `eventHandlers`  に存在する関数であれば、 現在の`value` を渡しつつ呼び出します。
+
+`_triggerEvent` 関数は、入力キーの`click` イベントに登録されています。
+
+```jsx
+case "backspace":
+    keyElement.classList.add("keyboard__key--wide");
+    keyElement.innerHTML = createIconHTML("backspace");
+
+    keyElement.addEventListener("click", () => {
+        this.properties.value = this.properties.value.substring(0, this.properties.length - 1);
+        this._triggerEvent("oninput");
+    })
+    break;
+```
+
+```jsx
+open(initialValue, oninput, onclose) {
+    this.properties.value = initialValue || "";
+    this.eventHandlers.oninput = oninput;
+    this.eventHandlers.onclose = onclose;
+    this.elements.main.classList.remove("keyboard--hidden");
+},
+
+close() {
+    this.value = "";
+    this.eventHandlers.oninput = oninput;
+    this.eventHandlers.onclose = onclose;
+    this.elements.main.classList.add("keyboard--hidden")
+}
+```
+
+`open` `close` にはキーボードがアクティブ/非アクティブになったときの処理が記述されています。
+
+具体的には、 
+
+- `value` のリセット
+- `eventHandlers` のリセット
+- `"keyboard--hidden"` クラスの制御
+
+です。
+
+```jsx
+document.querySelectorAll(".use-keyboard-input").forEach(element => {
+    element.addEventListener("focus", () => {
+        this.open(element.value, currentValue => {
+            element.value = currentValue;
+        });
+    });
+})
+```
+
+最後に `textarea` の `focus` イベントに `open` を登録します。
+
+`focus` された時、`open(initialValue, oninput, onclose`) に対して
+
+- `element.value` (`initialValue`)
+- 引数として渡された値を `element.value` に代入する関数
+
+をそれぞれ渡しています。
+
+無事完成です。
+
+([https://user-images.githubusercontent.com/85564407/155619812-c50eadbd-991e-4e2e-8323-4877eaf20c90.gif](https://user-images.githubusercontent.com/85564407/155619812-c50eadbd-991e-4e2e-8323-4877eaf20c90.gif))
+
+![virtual-keyboard-demo.gif](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/a4f8c778-d187-47bd-bc16-c7461163045a/virtual-keyboard-demo.gif)
