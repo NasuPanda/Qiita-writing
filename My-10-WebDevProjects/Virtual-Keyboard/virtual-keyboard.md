@@ -25,33 +25,6 @@
 
 コレくらいしか思いつかないな・・・
 
-# 仮想キーボード
-
-## 概要
-
-下の動画を参考にして、画面上で操作出来る仮想キーボードを実装していく。
-
-[https://www.youtube.com/watch?v=N3cq0BHDMOY](https://www.youtube.com/watch?v=N3cq0BHDMOY)
-
-### 主な目的
-
-- 仮想キーボードの作り方を学ぶ
-- 仮想キーボードのように複雑なレイアウトをどのように実現するのか学ぶ
-- コードの書き方を参考にする
-
-### **完成イメージ**
-
-[https://codepen.io/dcode-software/pen/KYYKxP](https://codepen.io/dcode-software/pen/KYYKxP)
-
-### **必要な要素**
-
-現時点で必要そうな要素を考えてみます。
-
-- キーイベントに反応して値を出力
-- キーイベントに反応してアニメーション
-
-コレくらいしか思いつかないな・・・
-
 ## HTML実装
 
 早速実装していきます。
@@ -190,8 +163,6 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 
 `.keyboard--hidden` という名称のクラスを使う。
 
-✅ BMV block element modifier　CSSのネーミング
-
 ```css
 .keyboard--hidden {
     bottom: -100%;
@@ -199,6 +170,67 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 ```
 
 `bottom: -100%` を使用、JSによりクラスを `add/remove` することで見える状態⇔見えない状態を切り替える。
+
+### BEMについて
+
+動画内でBEMという命名規則に従う、といった趣旨の話をされていました。
+
+調べてみます。
+
+参考
+
+- [Google HTML/CSS Style Guide](https://google.github.io/styleguide/htmlcssguide.html)
+- [【命名規則】BEMを使った書き方についてまとめてみた【CSS】 - Qiita](https://qiita.com/takahirocook/items/01fd723b934e3b38cbbc)
+- [一番詳しいCSS設計規則BEMのマニュアル - Qiita](https://qiita.com/Takuan_Oishii/items/0f0d2c5dc33a9b2d9cb1)
+
+#### BEMとは
+
+> BEMはBlock Element Modifierの略で、CSSを設計･命名していく手法です。
+> 
+
+> Block： 大枠となる独立した要素
+> 
+
+> Element： Block中の要素
+> 
+
+> Modifier： BlockやElementのスタイル
+> 
+
+#### 命名ルール
+
+クラスであれば以下のように。
+
+<aside>
+✅ class=”block__element—modifier”
+
+</aside>
+
+> Block： 大枠となる独立した要素
+> 
+
+> Element： Block中の要素
+> 
+
+> Modifier： BlockやElementのスタイル
+> 
+
+これらの要素を以下のルールに基づいて命名します。
+
+- block elementはアンダースコア2つで区切る
+- element modifierはハイフン2つで区切る
+- block, elemetn, modifierが複数の単語で構成される場合、単語間はハイフン1つで区切る
+
+#### ファイル
+
+1blockにつき1ファイル。
+
+`block名.css`とする。
+
+> CSSは全ての名前がグローバルなため, 命名が重複するとメンテナンス性が著しく低下するのが弱点であるが, BEMは命名規則を厳しく縛ることによってこの弱点を克服しており, element名はいくら重複しても問題ない.ただし, block名が重複してしまうとせっかく克服したものが台無しになってしまうため絶対に避けなければならない.1ファイルにつき1blockしか定義せずファイル名をblock名にする規則を守ってさえいれば, block名が重複する心配が無い.
+> 
+
+仮想キーボードでは `keyboard` がblockですね。
 
 ### キー
 
@@ -255,13 +287,28 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 
 `outline: none`
 
-✅　要調査
+[outline - CSS: カスケーディングスタイルシート | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/outline#%E8%A7%A3%E8%AA%AC)
+
+borderとoutlineの違いは以下です。
+
+> [境界線](https://developer.mozilla.org/ja/docs/Web/CSS/border)と輪郭線はとても似ています。しかし、輪郭線は以下の点で境界線とは異なります。
+> 
+
+> 輪郭線は領域を占有せず、要素のコンテンツの外側に描かれます。- 仕様によれば、輪郭線は矩形である必要はありませんが、ふつうは矩形です。
+> 
+
+> 他の一括指定プロパティと同様に、省略された値は[初期値](https://developer.mozilla.org/ja/docs/Web/CSS/initial_value)に設定されます。
+> 
+
+翻訳されてしまっていてわかりにくいですが `outline` は要素の外側に描画されるそうです。
 
 `inline-flex`
 
-キーの中にアイコンを置くことがあり、それらを中央寄せしたいので。
+キーの中にアイコンを置くことがあり、それらを中央寄せしたいので設定します。
 
-✅　要調査
+[display - CSS: カスケーディングスタイルシート | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/display)
+
+インライン要素のような振る舞いをしつつ、内容物を `flex` に従ってレイアウトします。
 
 #### キーにアイコン表示
 
@@ -289,7 +336,9 @@ Google Material iconを使ってアイコンを置いてみます。
 }
 ```
 
-- [vertical-align  | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/vertical-align)
+`vertical-align`
+
+参考 : [vertical-align  | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/vertical-align)
 
 > vertical-align は、2 つの場面で使用することができます。
 > 
@@ -302,11 +351,12 @@ Google Material iconを使ってアイコンを置いてみます。
 
 > `vertical-align` はインライン要素、インラインブロック要素、表のセル要素だけに適用されることに注意してください。つまり、[ブロックレベル要素](https://developer.mozilla.org/ja/docs/Web/HTML/Block-level_elements)の垂直方向の配置には使用できません。
 > 
-- [webkit-tap-highlight-color](https://developer.mozilla.org/ja/docs/Web/CSS/-webkit-tap-highlight-color)
 
-標準ではないプロパティです。
+`webkit-tap-highlight-color`
 
-Firefox、Safariではサポートされていません。
+参考 : [webkit-tap-highlight-color](https://developer.mozilla.org/ja/docs/Web/CSS/-webkit-tap-highlight-color)
+
+標準ではないプロパティです。Firefox、Safariではサポートされていません。
 
 > **`webkit-tap-highlight-color`** は CSS の標準外のプロパティで、リンクがタップされている間に表示される強調色を設定します。強調は、ユーザーがタップしたことが正常に認識されていることを示し、またどの要素がタップされているかを示します。
 > 
@@ -342,8 +392,6 @@ capslockのアクティブ/非アクティブを示すライトのためらし�
 用のCSSを追加します。
 
 HTMLにアイコン、クラスを追加します。
-
-✅　命名規則
 
 ```html
 <button type="button" class="keyboard__key keyboard__key--wide">
@@ -473,17 +521,13 @@ close() {
 }
 ```
 
-`open`には`、initialVale` を渡します。
+`open`には`initialVale` を渡します。
 
 これは、 `textarea` に既に入力があった場合、その入力をスタート値にするためです。
 
 ### `init`
 
 全てのDOMがロードされたときをトリガーに `init` を実行します。
-
-✅ load との違いは？
-
-[Window: DOMContentLoaded イベント - Web API | MDN](https://developer.mozilla.org/ja/docs/Web/API/Window/DOMContentLoaded_event)
 
 ```jsx
 // 全てのDOMがロードされた時
@@ -515,6 +559,41 @@ init() {
 `keyboard--hidden` の頭に1をつけているのは、開発用(開発中は見えるようにしておく)だから。
 
 こういった小技は勉強になりますね。
+
+#### `DOMContentLoaded`
+
+参考
+
+- [Window: DOMContentLoaded イベント - Web API | MDN](https://developer.mozilla.org/ja/docs/Web/API/Window/DOMContentLoaded_event)
+- [ページのライフサイクル: DOMContentLoaded, load, beforeunload, unload](https://ja.javascript.info/onload-ondomcontentloaded)
+- [DOMContentLoaded周りの処理を詳しく調べてみました - Qiita](https://qiita.com/mamosan/items/ff336b5cc0a1a95e03a7)
+- [javascript - Difference between DOMContentLoaded and load events - Stack Overflow](https://stackoverflow.com/questions/2414750/difference-between-domcontentloaded-and-load-events)
+
+HTMLの解析、DOMツリーの構築が完了した段階で発生するイベントです。
+
+`img` のような外部リソース、スタイルシートはまだ読み込まれていない可能性があります。
+
+それに対して`load`は、ブラウザが画像やスタイルなどを含めたすべてのリソースを読み込んだ段階で発生するイベントです。
+
+> • `window` での `load` イベントはページとすべてのリソースがロードされたときにトリガされます。通常はこんなに長く待つ必要はないため、めったに使われません。
+> 
+
+> [ページのライフサイクル: DOMContentLoaded, load, beforeunload, unload](https://ja.javascript.info/onload-ondomcontentloaded)
+> 
+
+> 別なイベントである `[load](https://developer.mozilla.org/ja/docs/Web/API/Window/load_event)`は、ページ全体が読み込まれたことを検出するためにのみ使用してください。 `load`を、 `DOMContentLoaded`がより適切である場面に使用する間違いがよくあります。
+> 
+
+> [Window: DOMContentLoaded イベント - Web API | MDN](https://developer.mozilla.org/ja/docs/Web/API/Window/DOMContentLoaded_event)
+> 
+
+上のような記述から、
+
+特別な理由がない限り `DOMContentLoaded` で、
+
+何かしら(画像を操作したいなど)の理由があれば `load` を使う。
+
+という感じでしょうか。
 
 ### `_createKeys`
 
@@ -700,9 +779,9 @@ this.elements.keys = this.elements.keysContainer.querySelectorAll(".keyboard__ke
 
 `capslock` による制御で使うために、 `Keyboard.keys` に全てのキー要素を追加します。
 
-通常のキーはアイコンを持たない→子要素を持たない
+通常のキーはアイコンを持たないため、子要素を持ちません。
 
-ことを利用して、表示を更新します。
+これを利用して表示を更新します。
 
 ```jsx
 _toggleCapsLock() {
@@ -797,3 +876,17 @@ document.querySelectorAll(".use-keyboard-input").forEach(element => {
 ([https://user-images.githubusercontent.com/85564407/155619812-c50eadbd-991e-4e2e-8323-4877eaf20c90.gif](https://user-images.githubusercontent.com/85564407/155619812-c50eadbd-991e-4e2e-8323-4877eaf20c90.gif))
 
 ![virtual-keyboard-demo.gif](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/a4f8c778-d187-47bd-bc16-c7461163045a/virtual-keyboard-demo.gif)
+
+## 学んだこと
+
+キーボードを `Keyboard` オブジェクトとして表現していく流れが綺麗すぎて感動しました。
+
+- 仮想キーボードの考え方を理解した
+    - アクティブ/非アクティブ状態を持つ
+    - オブジェクトとしてキーの状態、入力などを保持することでキーボードを表現する
+- 実装面
+    - BEMについて
+    - Google Material Iconを使うと簡単にアイコンを扱える
+    - `load` `DOMContentLoaded` の違い
+    - オブジェクトの扱い
+    - JavaScriptを使ってHTMLを描画する方法

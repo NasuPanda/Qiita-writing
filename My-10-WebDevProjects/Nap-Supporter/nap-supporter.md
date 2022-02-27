@@ -1,4 +1,4 @@
-　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　## はじめに
+## はじめに
 
 HTML/CSS/JavaScriptで10個(くらい)何かを作ってみるチャレンジの一環として、
 お昼寝用BGM＆アラームツールを作っていきます。
@@ -60,7 +60,7 @@ https://github.com/NasuPands/My-10-Web-Dev-Projects
 ### 主な目的
 
 - 会社でのお昼寝を快適にする
-- 音の扱いを学ぶ
+- JavaScriptから音を扱う方法を学ぶ
 - 静的なサイトをスマホから扱える状態にする方法（ホスティング）を学ぶ
 
 ### 完成イメージ
@@ -71,9 +71,9 @@ Keynoteで簡単なモックアップを作成しました。
 
 ![mockup.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/a15af042-69ec-4531-9c34-5ff58a418235/mockup.png)
 
-ざっくりしたデザインについては、仕事中たまに使っていて、使いやすいと思っていた以下のサイトを参考にしました。
+ざっくりしたデザインについては、仕事中たまに使っている以下のツールを参考にしました。
 
-[【WEBツール】ポモドーロ・テクニックタイマー](https://www.oh-benri-tools.com/tools/time/pomodoro)
+https://www.oh-benri-tools.com/tools/time/pomodoro
 
 ### 必要な要素
 
@@ -91,19 +91,19 @@ Keynoteで簡単なモックアップを作成しました。
 
 自然音
 
-[https://vsq.co.jp/plus/sound/category/environment/](https://vsq.co.jp/plus/sound/category/environment/)
+https://vsq.co.jp/plus/sound/category/environment/
 
 アラーム
 
-[https://otologic.jp/free/se/clock01.html](https://otologic.jp/free/se/clock01.html)
+https://otologic.jp/free/se/clock01.html
 
 これらのサイトの音源を使わせていただきます。
 
 ### 音声の扱い
 
-[`<audio>`](https://developer.mozilla.org/ja/docs/Web/HTML/Element/audio)を使えば良さそう。
+[audio](https://developer.mozilla.org/ja/docs/Web/HTML/Element/audio)を使えば良さそう。
 
-```js
+```html
 <audio
     controls
     src="/media/cc0-audio/t-rex-roar.mp3">
@@ -113,7 +113,6 @@ Keynoteで簡単なモックアップを作成しました。
 ```
 
 `controls` でブラウザ規定のインターフェースが生成される。
-
 指定しなかった場合、視覚的な出力は何も無い。
 
 ```html
@@ -169,23 +168,18 @@ Keynoteで簡単なモックアップを作成しました。
 
 選択した要素⇔音源の紐付けはどうしたら良いんだろう？
 
-と思い、いくつかサイトを覗いてみると、選択するようなリストに `data-value="alerm1.mp3"` といった記述がありました。
+と思い、いくつかサイトのHTMLを覗いてみると、`option`に`data-value="hoge.mp3"` のような記述がありました。
 
-これは[カスタムデータ属性](https://developer.mozilla.org/ja/docs/Web/HTML/Global_attributes/data-*)と呼ばれる仕様で、JavaScriptで値を取得する時に便利なようです。
+これは**カスタムデータ属性**と呼ばれる仕様で、JavaScriptで値を取得する時に便利なようです。
 
 使ってみたいと思います。
 
 参考
 
-[カスタムデータ属性とは? - Qiita](https://qiita.com/k152744/items/c96fcf0141798bf48dd7)
+- [カスタムデータ属性とは? - Qiita](https://qiita.com/k152744/items/c96fcf0141798bf48dd7)
+- [カスタムデータ属性 - MDN](https://developer.mozilla.org/ja/docs/Web/HTML/Global_attributes/data-*)
 
 ### ホスティング
-
-スマホから(インターネット経由で)Webアプリを使えるようにするには、ホスティングが必要になります。
-
-Webサイト・Webサービスを公開するには、サーバを用意する必要があります。
-
-自分でサーバを用意するのは難しいので**、一般的にはホスティングサービスが(レンタルサーバ)**利用されます。
 
 代表的なホスティングサービス
 
@@ -206,13 +200,12 @@ Webサイト・Webサービスを公開するには、サーバを用意する�
 - [AWS](https://aws.amazon.com/jp/)
     - プライベートクラウドやネットワークの設定レベルで多様な校正をカスタマイズできる
     - 多様な種類を揃えているため、サービスの選定及び設計ノウハウが必要
-    
 
 追加の登録や設定不要で利用出来るようなので、今回は**Github Pages**を利用したいと思います。
 
 ## HTML実装
 
-まずは自力で出来るところまで。
+まずは出来るところまで。
 
 ```html
 <header>
@@ -228,7 +221,7 @@ Webサイト・Webサービスを公開するには、サーバを用意する�
     </div>
 </main>
 <footer>
-    <p>使用音源</p>
+    <h2>使用音源</h2>
     <a href="https://vsq.co.jp/plus/sound/category/environment/">環境音 | フリー音源・効果音 | VSQ plus+</a>
     <a href="https://otologic.jp/free/se/clock01.html">フリー効果音:時計 | OtoLogic</a>
 </footer>
@@ -238,7 +231,7 @@ Webサイト・Webサービスを公開するには、サーバを用意する�
 
 後から取得するために `id` を設定しておきます。
 
-特に何も指定していないので `preload` され、画面には表示されません。
+特に何も指定していない場合、自動で `preload` され、画面には何も表示されません。
 
 ```html
 <audio src="assets/Nature/fire.mp3" id="nature-fire"></audio>
@@ -307,8 +300,7 @@ appearance: none;
 
 [https://www.g200kg.com/images/2017/20171230range3.png](https://www.g200kg.com/images/2017/20171230range3.png)
 
-> [input type=range タグをカスタマイズするために | g200kg Music & Software](https://www.g200kg.com/archives/2017/12/input-typerange.html)　より
-> 
+> [input type=range タグをカスタマイズするために | g200kg Music & Software](https://www.g200kg.com/archives/2017/12/input-typerange.html) より
 
 また、上の画像のようにスライダーのツマミのスタイルを変更するためには `::webkit-slider-thimb` を `none` にします。
 
@@ -446,7 +438,7 @@ select {
 
 ### スライダーから値取得
 
-スライダーから値を取得することで色々と操作していくので、まずはスライダーから値を取得していきます。
+スライダーから値を取得して色々と操作していくので、まずはスライダーから値を取得出来るようにします。
 
 スライダーでは [input](https://developer.mozilla.org/ja/docs/Web/API/HTMLElement/input_event) イベントと [change](https://developer.mozilla.org/ja/docs/Web/API/HTMLElement/change_event) イベントが発生します。
 
@@ -472,7 +464,7 @@ bgmVolumeSlider.addEventListener("input", sliderChange);
 alarmVolumeSlider.addEventListener("input", sliderChange);
 ```
 
-([https://user-images.githubusercontent.com/85564407/155032422-a48b773f-7b83-4884-93e9-0943951e7199.gif](https://user-images.githubusercontent.com/85564407/155032422-a48b773f-7b83-4884-93e9-0943951e7199.gif))
+![slider](https://user-images.githubusercontent.com/85564407/155032422-a48b773f-7b83-4884-93e9-0943951e7199.gif)
 
 OKですね。
 
@@ -652,13 +644,10 @@ alarmSelect.addEventListener("change", () => {
 #### `dataset` 
 
 > [値へのアクセス](https://developer.mozilla.org/ja/docs/Web/API/HTMLElement/dataset#%E5%80%A4%E3%81%B8%E3%81%AE%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9)
-> 
 > - 属性は dataset のオブジェクトプロパティのようにキャメルケース名 (キー) を使用して、 `element.dataset.keyname` のように設定したり読み取ったりすることができます。
 > - 属性はブラケット構文を使用して、 `element.dataset['keyname']` のように設定したり読み取ったりすることもできます。
 > - `[in` 演算子](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/in)を使用して、特定の属性が存在するかどうかを確認できます。
-> 
 > [HTMLElement.dataset - Web API | MDN](https://developer.mozilla.org/ja/docs/Web/API/HTMLElement/dataset) より
-> 
 
 ### `audio` の取得
 
@@ -695,7 +684,7 @@ console.log(`bgm-${selectedBGM}`, selectedAudio)
 - [HTMLMediaElement - Web API | MDN](https://developer.mozilla.org/ja/docs/Web/API/HTMLMediaElement)
 - [HTMLAudioElement - Web API | MDN](https://developer.mozilla.org/ja/docs/Web/API/HTMLAudioElement)
 
-`HTMLAudioElement` には固有のプロパティ・メソッドはありません。 `HTMLMediaElement` を継承しています。 
+`HTMLAudioElement` には固有のプロパティ・メソッドはありません。 `HTMLMediaElement` を継承しています。
 
 BGM/アラームの音量チェックから実装していきます。
 
@@ -726,7 +715,7 @@ function playVolumeCheck(audioId) {
 
 また、再生したい `audio` には `alarm` と `bgm` の2種類があるので、
 
- `audioId` という変数を使って `audio` や `volume` をそれぞれ選択出来るようにしました。 
+ `audioId` という変数を使って `audio` や `volume` をそれぞれ選択出来るようにしました。
 
 #### ボタン無効化
 
@@ -775,12 +764,9 @@ alarmCheck.addEventListener('click', () => { playVolumeCheck("alarm", volumeChec
 ### `audio` 制御 指定時間再生
 
 スタート/ストップボタン、時間の取得、BGMの選択により
-
 指定時間、指定した音声を再生します。
 
-今更ですが、リセットボタンはどう考えても不要なので消します。
-
-昼寝リセットとは一体・・・
+今更ですが、リセットボタンは不要なので消します。
 
 #### タイマー更新
 
@@ -827,9 +813,7 @@ startBtn.addEventListener("click", start.bind(null,
 ```
 
 しかし、このようにしてしまうと
-
 最初にコードが実行された時の `input` の状態= 時間指定が初期値
-
 を参照してしまいます。
 
 そのため、関数内で変数を定義する形に変更しました。
@@ -839,10 +823,7 @@ startBtn.addEventListener("click", start.bind(null,
 ログを追ってみると値は更新されているのに、HTMLが更新されませんでした。
 
 考えてみれば当然の話で、
-
- `sec -= 1` などの計算をした時に数値に変換される
-
-→ `padStart` も使えないし、HTMLも更新されない。
+ `sec -= 1` などの計算をした時に数値に変換される → `padStart` も使えないし、HTMLも更新されない。
 
 `String` で文字列型に変換して対処しました。
 
@@ -1017,7 +998,7 @@ stopBtn.addEventListener("click", () => {
 } )
 ```
 
-([https://user-images.githubusercontent.com/85564407/155314893-b197f8c9-f335-4540-a413-15196c0ce604.gif](https://user-images.githubusercontent.com/85564407/155314893-b197f8c9-f335-4540-a413-15196c0ce604.gif))
+![stop-highlight](https://user-images.githubusercontent.com/85564407/155314893-b197f8c9-f335-4540-a413-15196c0ce604.gif)
 
 OKですね。
 
@@ -1035,10 +1016,9 @@ function playVolumeCheck(audioId) {
 ```
 
 この関数をイベントリスナーのコールバックに登録したいのですが、この関数は引数が必要です。
-
 そこで、 `bind` を利用します。
 
-`this` の設定が不要な場合は、
+`this` の設定が不要な場合は
 
 `this` には `null` を渡しておいて、関数に引数だけ渡す
 
@@ -1264,17 +1244,17 @@ Github Pagesを使ってホスティングします。
 
 出来ました！超簡単ですね。
 
-[https://NasuPands.github.io/Nap-Supporter/](https://NasuPands.github.io/Nap-Supporter/)
+https://NasuPands.github.io/Nap-Supporter/
 
 ## 学んだこと
 
+- `audio`のHTMLはJavaScriptから生成する形にした方が良かったかもしれない
 - 仕様が固まっていない段階からきれいに書くのは難しい
-    - 記事では実装の流れをある程度整えて書いていますが、実際は「あ、ここ重複してる」「ん？こここうした方が良くない？」という感じで実装中に無駄に気づく→修正という流れが多かったです。
+    - 記事では実装の流れをある程度整えて書いていますが、実際は「あ、ここ重複してる」「ん？こここうした方が良くない？」という感じで実装中に無駄に気づく → 修正という流れが多かったです。
     - 実装しながらリファクタリングしてしまうと、どこをいじっていたのかわからなくなりそう。リファクタリングのタイミングも考えたほうが良い。
-- どう実装したか、すぐ忘れる
-    - 実装時にあまりメモを取らずに進めたのですが、最初はどのように実装していて、どうリファクタリングしたから今の形になったのか、曖昧な箇所が多い印象です。
+- 実装時にあまりメモを取らずに進めたのですが、最初はどのように実装していて、どうリファクタリングしたから今の形になったのか、曖昧な箇所が多い印象。
     - これで困るのは記事を書く時くらいですが、ちょっとした問題でも「どんな問題があって、どう解決したのか？」くらいは残しておくべきだと思いました。
-    - ~~Gitのログを追えばいいだけの話なのですが、面倒でした。~~
+    - Gitのログを追えばいいだけの話なのですが、面倒でした。
 - まだまだ実装に必要な要素の考慮漏れが多い
 - 実装面
     - レスポンシブ対応(さわり程度)
