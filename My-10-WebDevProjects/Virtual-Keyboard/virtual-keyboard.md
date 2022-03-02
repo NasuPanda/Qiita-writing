@@ -2,34 +2,25 @@
 
 ## 概要
 
-下の動画を参考にして、画面上で操作出来る仮想キーボードを実装していく。
+下の動画を参考にして、画面上で操作出来る仮想キーボードを実装していきます。
 
 [https://www.youtube.com/watch?v=N3cq0BHDMOY](https://www.youtube.com/watch?v=N3cq0BHDMOY)
 
 ### 主な目的
 
 - 仮想キーボードの作り方を学ぶ
-- 仮想キーボードのように複雑なレイアウトをどのように実現するのか学ぶ
+  - キーボードのように若干複雑なレイアウトをどのように実現するのか学ぶ
 - コードの書き方を参考にする
 
-### **完成イメージ**
+### 完成イメージ
 
 [https://codepen.io/dcode-software/pen/KYYKxP](https://codepen.io/dcode-software/pen/KYYKxP)
-
-### **必要な要素**
-
-現時点で必要そうな要素を考えてみます。
-
-- キーイベントに反応して値を出力
-- キーイベントに反応してアニメーション
-
-コレくらいしか思いつかないな・・・
 
 ## HTML実装
 
 早速実装していきます。
 
-とりあえずHTMLを追加。
+とりあえずHTML。
 
 ```html
 <!DOCTYPE html>
@@ -59,6 +50,23 @@
 
 `textarea` に対してインラインCSSを書き、スタイルを割り当てます。
 
+本来キーボード部分はJavaScriptで作りますが、今は存在しません。
+
+CSS編集のため、ダミーのHTMLを作って行きます。
+
+具体的には、キーボードのコンテナ、キーボード用の `div` を作ります。
+そして、その中にキーボード（ `button type="button"` ）を入れていきます。
+
+```js
+<div class="keyboard">
+  <div class="keyboard__keys">
+      <button type="button" class="keyboard__key">a</button>
+  </div>
+</div>
+```
+
+### Google Material icon
+
 特殊なキーの表現には[Google Material icon](https://google.github.io/material-design-icons/)を使っていくようです。
 
 HTMLにリンクを追加して使えるようにします。
@@ -66,26 +74,6 @@ HTMLにリンクを追加して使えるようにします。
 ```html
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet">
-```
-
-本来キーボード部分はJavaScriptで作りますが、今は存在しません。
-
-CSS編集のために、ダミーのHTMLを作って行きます。
-
-キーボードのコンテナと、キーボード用の `div` を作ります。
-
-**VSCodeのHTMLファイル編集時、 `.keyboard__keys` と打つと自動的に `div class="keyboard__keys"` が生成されます。**
-
-初めて知りました。
-
-そして、その中にキーボード（ `button type="button"` ）を入れていきます。
-
-```jsx
-<div class="keyboard">
-  <div class="keyboard__keys">
-      <button type="button" class="keyboard__key">a</button>
-  </div>
-</div>
 ```
 
 ## CSS実装
@@ -107,26 +95,25 @@ CSS編集のために、ダミーのHTMLを作って行きます。
 }
 ```
 
-`position: fixed`
+**`position: fixed`**
 
 スクロールしてもキーボードが表示され続けるようにする。
 
-`padding: 5px 0;`
+**`padding: 5px 0;`**
 
 [padding - CSS: カスケーディングスタイルシート | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/padding)
 
-一括指定。この場合は左右5px、上下0。
+一括指定。この場合は左右`5px`、上下`0`。
 
-`background-color: #004134;`
+**`background-color: #004134;`**
 
 背景色の指定。
 
-`box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);`
+**`box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);`**
 
 [box-shadow - CSS: カスケーディングスタイルシート | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/box-shadow)
 
 以下のような構文で使用します。
-
 `blur-radius` は値が大きくなるほどぼかしが大きくなり、**影の面積が広く・色が薄く**なります。
 
 ```css
@@ -136,6 +123,7 @@ box-shadow: none;
 /* offset-x | offset-y | color */
 box-shadow: 60px -16px teal;
 
+/* 今回はこれ */
 /* offset-x | offset-y | blur-radius | color */
 box-shadow: 10px 5px 5px black;
 
@@ -149,19 +137,19 @@ box-shadow: inset 5em 1em gold;
 box-shadow: 3px 3px red, -1em 0 0.4em olive;
 ```
 
-`user-select: none;`
+**`user-select: none;`**
 
 [user-select - CSS: カスケーディングスタイルシート | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/user-select)
 
 ユーザーのテキスト範囲選択を禁止します。
 
-`transition: bottom 0.4s;`
+**`transition: bottom 0.4s;`**
 
 キーボードが下から出てくるアニメーション。
 
 ### キーボードを隠す
 
-`.keyboard--hidden` という名称のクラスを使う。
+`.keyboard--hidden` という名称のクラスを使います。
 
 ```css
 .keyboard--hidden {
@@ -174,7 +162,6 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 ### BEMについて
 
 動画内でBEMという命名規則に従う、といった趣旨の話をされていました。
-
 調べてみます。
 
 参考
@@ -186,20 +173,12 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 #### BEMとは
 
 > BEMはBlock Element Modifierの略で、CSSを設計･命名していく手法です。
-> 
-
-> Block： 大枠となる独立した要素
-> 
-
-> Element： Block中の要素
-> 
-
-> Modifier： BlockやElementのスタイル
-> 
-
+> - Block： 大枠となる独立した要素
+> - Element： Block中の要素
+> - Modifier： BlockやElementのスタイル
 #### 命名ルール
 
-クラスであれば以下のように。
+クラスであれば以下のようになります。
 
 <aside>
 ✅ class=”block__element—modifier”
@@ -207,19 +186,14 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 </aside>
 
 > Block： 大枠となる独立した要素
-> 
-
 > Element： Block中の要素
-> 
-
 > Modifier： BlockやElementのスタイル
-> 
 
-これらの要素を以下のルールに基づいて命名します。
+これらの要素を以下のルールに基づいて命名しています。
 
-- block elementはアンダースコア2つで区切る
-- element modifierはハイフン2つで区切る
-- block, elemetn, modifierが複数の単語で構成される場合、単語間はハイフン1つで区切る
+- block, elementは**アンダースコア2つ**で区切る
+- element, modifierは**ハイフン2つ**で区切る
+- block, element, modifierが複数の単語で構成される場合、単語間は**ハイフン1つ**で区切る
 
 #### ファイル
 
@@ -228,7 +202,6 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 `block名.css`とする。
 
 > CSSは全ての名前がグローバルなため, 命名が重複するとメンテナンス性が著しく低下するのが弱点であるが, BEMは命名規則を厳しく縛ることによってこの弱点を克服しており, element名はいくら重複しても問題ない.ただし, block名が重複してしまうとせっかく克服したものが台無しになってしまうため絶対に避けなければならない.1ファイルにつき1blockしか定義せずファイル名をblock名にする規則を守ってさえいれば, block名が重複する心配が無い.
-> 
 
 仮想キーボードでは `keyboard` がblockですね。
 
@@ -238,7 +211,7 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 
 キーそれぞれに対してスタイルを追加していきます。
 
-キー全て。
+- キー全て
 
 ```css
 .keyboard__keys {
@@ -246,9 +219,9 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 }
 ```
 
-中心になるように。
+テキストが中心になるようにします。
 
-それぞれのキーにスタイルを追加します。
+- それぞれのキー
 
 ```css
 .keyboard__key {
@@ -263,17 +236,16 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 }
 ```
 
-`width 6%` `max-width: 90px`
+**`width 6%` `max-width: 90px`**
 
 レスポンシブになるように。
+また、画面からはみ出さないように。
 
-また、モニターからはみ出さないように。
-
-`border-radius: 4px;` `border: none;`
+**`border-radius: 4px;` `border: none;`**
 
 角を丸め、線を消す。
 
-`background: rgba(255, 255, 255, 0.2)`
+**`background: rgba(255, 255, 255, 0.2)`**
 
 `.keyboard` で設定した**背景色よりも明るい色になるように**。
 
@@ -281,34 +253,29 @@ box-shadow: 3px 3px red, -1em 0 0.4em olive;
 
 更に追加します。
 
-`font-size: 1.05rem`
+**`font-size: 1.05rem`**
 
 ルートサイズより5％大きく
 
-`outline: none`
+**`outline: none`**
 
 [outline - CSS: カスケーディングスタイルシート | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/outline#%E8%A7%A3%E8%AA%AC)
 
 borderとoutlineの違いは以下です。
 
 > [境界線](https://developer.mozilla.org/ja/docs/Web/CSS/border)と輪郭線はとても似ています。しかし、輪郭線は以下の点で境界線とは異なります。
-> 
-
 > 輪郭線は領域を占有せず、要素のコンテンツの外側に描かれます。- 仕様によれば、輪郭線は矩形である必要はありませんが、ふつうは矩形です。
-> 
-
 > 他の一括指定プロパティと同様に、省略された値は[初期値](https://developer.mozilla.org/ja/docs/Web/CSS/initial_value)に設定されます。
-> 
 
-翻訳されてしまっていてわかりにくいですが `outline` は要素の外側に描画されるそうです。
+`border` `outline`まで翻訳されてしまっていて若干わかりにくいですが、 `outline` は要素の外側に描画されるそうです。
 
-`inline-flex`
+**`inline-flex`**
 
-キーの中にアイコンを置くことがあり、それらを中央寄せしたいので設定します。
+キーの中にアイコンを置くことがあり、それらを中央寄せするために設定します。
 
 [display - CSS: カスケーディングスタイルシート | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/display)
 
-インライン要素のような振る舞いをしつつ、内容物を `flex` に従ってレイアウトします。
+インライン要素のような振る舞いをしつつ、中身を `flex` に従ってレイアウトします。
 
 #### キーにアイコン表示
 
@@ -330,48 +297,38 @@ Google Material iconを使ってアイコンを置いてみます。
 
 ```css
 		・・・
-		vertical-align: top;
+    vertical-align: top;
     padding: 0;
     -webkit-tap-highlight-color: transparent;
 }
 ```
 
-`vertical-align`
+**`vertical-align`**
 
 参考 : [vertical-align  | MDN](https://developer.mozilla.org/ja/docs/Web/CSS/vertical-align)
 
 > vertical-align は、2 つの場面で使用することができます。
-> 
-
 > 包含する行ボックスの中で、インライン要素のボックスの垂直方向の配置を決める場合。例えば、[テキストの行の中で画像の垂直位置を決める](https://developer.mozilla.org/ja/docs/Web/CSS/vertical-align#vertical_alignment_in_a_line_box)ために使用することができます。
-> 
-
 > [表のセルの内容](https://developer.mozilla.org/ja/docs/Web/CSS/vertical-align#vertical_alignment_in_a_table_cell)の垂直方向の配置を決める場合。
-> 
-
 > `vertical-align` はインライン要素、インラインブロック要素、表のセル要素だけに適用されることに注意してください。つまり、[ブロックレベル要素](https://developer.mozilla.org/ja/docs/Web/HTML/Block-level_elements)の垂直方向の配置には使用できません。
-> 
 
-`webkit-tap-highlight-color`
+**`webkit-tap-highlight-color`**
 
 参考 : [webkit-tap-highlight-color](https://developer.mozilla.org/ja/docs/Web/CSS/-webkit-tap-highlight-color)
 
 標準ではないプロパティです。Firefox、Safariではサポートされていません。
 
-> **`webkit-tap-highlight-color`** は CSS の標準外のプロパティで、リンクがタップされている間に表示される強調色を設定します。強調は、ユーザーがタップしたことが正常に認識されていることを示し、またどの要素がタップされているかを示します。
-> 
-
-> `webkit-tap-highlight-color: red;
--webkit-tap-highlight-color: transparent; /* 強調をなくす */`
-> 
+> `webkit-tap-highlight-color` は CSS の標準外のプロパティで、リンクがタップされている間に表示される強調色を設定します。強調は、ユーザーがタップしたことが正常に認識されていることを示し、またどの要素がタップされているかを示します。
+>
+> ```css
+> webkit-tap-highlight-color: red;
+> -webkit-tap-highlight-color: transparent; /* 強調をなくす */
+> ```
 
 最後に、 `position: relative` を追加。
 
-`ralative` は基本位置を基準として移動する。
-
-capslockのアクティブ/非アクティブを示すライトのためらしい。 
-
-`absolute` だと親からの位置になってしまって、上手く配置出来ないのだと思われる。 
+capslockのアクティブ/非アクティブを示すライトのためらしい。
+`absolute` だと親からの位置になってしまって、ライトが上手く配置出来ないのだと思われる。
 
 #### キーがアクティブなとき
 
@@ -414,11 +371,9 @@ HTMLにアイコン、クラスを追加します。
 ```
 
 `width` を変更します。
-
 `.keyboard__key--extra-wide` ははみ出さないように`max-width` を指定します。
 
 capslockのライトを実装します。
-
 `keyboard__key--activatable` というクラスを持つcapslockキーを実装し、以下のスタイルを追加します。
 
 ```css
@@ -434,7 +389,7 @@ capslockのライトを実装します。
 }
 ```
 
-絶対位置指定で親(キーボード)の右上に配置し、スタイルを与えます。
+絶対位置指定で親(キー)の右上に配置し、スタイルを与えます。
 
 また、 `keyboard__key--active` を追加、ライトをアクティブにできるようにします。
 
@@ -456,7 +411,7 @@ capslockのライトを実装します。
 
 ### Keyboardオブジェクト
 
-```jsx
+```js
 const Keyboard = {
     elements: {
         main: null,
@@ -479,32 +434,30 @@ const Keyboard = {
 
 キーボードを表すために必要な`Keyboard`オブジェクトを定義していきます。
 
- 
-
-`elements`
+**`elements`**
 
 メイン要素(キーボード)、キーボードのコンテナ、それぞれのキー
 
-`eventHandlers`
+**`eventHandlers`**
 
 イベントハンドラー
 
-`properties`
+**`properties`**
 
 キーボードの入力値、capsLockのアクティブ状態
 
 また、このオブジェクトは以下のメソッドを持ちます。
 
 <aside>
-✅ `_` から始まるメソッドはプライベートメソッドです。
+`_` から始まるメソッドはプライベートメソッドです。
 
 </aside>
 
-```jsx
+```js
 init() {
 
 },
-_creatKeys() {
+_createKeys() {
 
 },
 _triggerEvent(handlerName) {
@@ -521,22 +474,21 @@ close() {
 }
 ```
 
-`open`には`initialVale` を渡します。
-
-これは、 `textarea` に既に入力があった場合、その入力をスタート値にするためです。
+`open`メソッドには`initialVale` を渡します。
+これは `textarea` に既に入力があった場合、その入力をスタート値にするためです。
 
 ### `init`
 
 全てのDOMがロードされたときをトリガーに `init` を実行します。
 
-```jsx
+```js
 // 全てのDOMがロードされた時
 window.addEventListener("DONContentLoaded", function() {
     Keyboard.init();
 })
 ```
 
-```jsx
+```js
 init() {
         // main要素を作成
         this.elements.main = document.createElement("div");
@@ -552,13 +504,11 @@ init() {
     },
 ```
 
-`elements` に生成したDOM要素を代入、 `document` に `appendChild` していく。
-
+`elements` に生成したDOM要素を代入、 `document` に `appendChild` していきます。
 なるほど、オブジェクトに生成した要素を持たせる感じなんですね。
 
 `keyboard--hidden` の頭に1をつけているのは、開発用(開発中は見えるようにしておく)だから。
-
-こういった小技は勉強になりますね。
+こういった小技も勉強になります。
 
 #### `DOMContentLoaded`
 
@@ -570,41 +520,31 @@ init() {
 - [javascript - Difference between DOMContentLoaded and load events - Stack Overflow](https://stackoverflow.com/questions/2414750/difference-between-domcontentloaded-and-load-events)
 
 HTMLの解析、DOMツリーの構築が完了した段階で発生するイベントです。
-
 `img` のような外部リソース、スタイルシートはまだ読み込まれていない可能性があります。
 
 それに対して`load`は、ブラウザが画像やスタイルなどを含めたすべてのリソースを読み込んだ段階で発生するイベントです。
 
-> • `window` での `load` イベントはページとすべてのリソースがロードされたときにトリガされます。通常はこんなに長く待つ必要はないため、めったに使われません。
-> 
-
+> `window` での `load` イベントはページとすべてのリソースがロードされたときにトリガされます。通常はこんなに長く待つ必要はないため、めったに使われません。
 > [ページのライフサイクル: DOMContentLoaded, load, beforeunload, unload](https://ja.javascript.info/onload-ondomcontentloaded)
-> 
-
 > 別なイベントである `[load](https://developer.mozilla.org/ja/docs/Web/API/Window/load_event)`は、ページ全体が読み込まれたことを検出するためにのみ使用してください。 `load`を、 `DOMContentLoaded`がより適切である場面に使用する間違いがよくあります。
-> 
-
 > [Window: DOMContentLoaded イベント - Web API | MDN](https://developer.mozilla.org/ja/docs/Web/API/Window/DOMContentLoaded_event)
-> 
 
 上のような記述から、
 
-特別な理由がない限り `DOMContentLoaded` で、
-
-何かしら(画像を操作したいなど)の理由があれば `load` を使う。
+- 特別な理由がない限り `DOMContentLoaded` を使う
+- 何かしら(画像を操作したいなど)の理由があれば `load` を使う
 
 という感じでしょうか。
 
 ### `_createKeys`
 
-`DocumentFlagment` を使ってHTML要素を追加していきます。
+`DocumentFragment` を使ってHTML要素を追加していきます。
 
-`DocumentFlagment` は仮想的なDOMツリーを生成するようなイメージで使います。
-
+`DocumentFragment` は仮想的なDOMツリーを生成するようなイメージで使います。
 主に大量の要素を一気に追加したい時なんかに使います。
 
-```jsx
-_creatKeys() {
+```js
+_createKeys() {
     const fragment = document.createDocumentFragment();
     const keyLayout = [
         "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "backspace",
@@ -631,7 +571,7 @@ _creatKeys() {
 
 #### 列区切り
 
-```jsx
+```js
 const insertLineBreak = ["backspace", "p", "enter", "?"].indexOf(key) !==-1;
 
 ...
@@ -645,13 +585,13 @@ if(insertLineBreak) {
 
 [String.prototype.indexOf() - JavaScript | MDN](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/String/indexOf)
 
-`indexOf` は見つからなければ `-1` を返すので、見つかった場合は `inserLineBreak` が `true` になります。
+`indexOf` は見つからなければ `-1` を返すので、見つかった場合は `innerLineBreak` が `true` になります。
 
 #### 特殊なキー
 
 `switch-case` を使います。
 
-```jsx
+```js
 switch(key) {
     case "backspace":
         keyElement.classList.add("keyboard__key--wide");
@@ -732,10 +672,10 @@ switch(key) {
 
 #### 通常のキー
 
-```jsx
+```js
 	default:
 	keyElement.textContent = key.toLowerCase();
-	
+
 	keyElement.addEventListener("click", () => {
 		this.properties.value += this.properties.capsLock ? key.toUpperCase() : key.toLowerCase();
 		this._triggerEvent("oninput");
@@ -753,7 +693,7 @@ switch(key) {
 
 `innerHTML` だけ空で、 `createIcon` などの関数は正常に動いているように見えたのでそこそこ解決に時間がかかってしまいましたが、
 
-```jsx
+```js
 const createIconHTML = (icon_name) => {
     return `<i class="material-icons>${icon_name}</i>`;
 }
@@ -773,21 +713,21 @@ OKですね。
 
 ### capslockがONになったときの挙動
 
-```jsx
+```js
 this.elements.keys = this.elements.keysContainer.querySelectorAll(".keyboard__key");
 ```
 
 `capslock` による制御で使うために、 `Keyboard.keys` に全てのキー要素を追加します。
 
-通常のキーはアイコンを持たないため、子要素を持ちません。
+通常のキーはアイコンを持たないので、子要素を持ちません。
 
 これを利用して表示を更新します。
 
-```jsx
+```js
 _toggleCapsLock() {
 	  console.log("Caps Lock Toggled!");
 	  this.properties.capsLock = !this.properties.capsLock;
-	
+
 	  for (const key of this.elements.keys) {
 	      if(key.childElementCount === 0) {
 	          key.textContent = this.properties.capsLock ? key.textContent.toUpperCase() : key.textContent.toLowerCase();
@@ -796,11 +736,11 @@ _toggleCapsLock() {
 	}
 ```
 
-三項演算子は今回のように**ある入力を元にして値がスイッチする場合**に便利そうですね。
+三項演算子は今回のように**ある入力を元にして値がスイッチするような場合**に便利そうですね。
 
 ### イベントの制御
 
-```jsx
+```js
 _triggerEvent(handlerName) {
         console.log("Event Triggered! Event Name:" + handlerName);
 
@@ -814,7 +754,7 @@ _triggerEvent(handlerName) {
 
 `_triggerEvent` 関数は、入力キーの`click` イベントに登録されています。
 
-```jsx
+```js
 case "backspace":
     keyElement.classList.add("keyboard__key--wide");
     keyElement.innerHTML = createIconHTML("backspace");
@@ -826,7 +766,7 @@ case "backspace":
     break;
 ```
 
-```jsx
+```js
 open(initialValue, oninput, onclose) {
     this.properties.value = initialValue || "";
     this.eventHandlers.oninput = oninput;
@@ -844,7 +784,7 @@ close() {
 
 `open` `close` にはキーボードがアクティブ/非アクティブになったときの処理が記述されています。
 
-具体的には、 
+具体的には、
 
 - `value` のリセット
 - `eventHandlers` のリセット
@@ -852,7 +792,7 @@ close() {
 
 です。
 
-```jsx
+```js
 document.querySelectorAll(".use-keyboard-input").forEach(element => {
     element.addEventListener("focus", () => {
         this.open(element.value, currentValue => {
@@ -873,13 +813,19 @@ document.querySelectorAll(".use-keyboard-input").forEach(element => {
 
 無事完成です。
 
-([https://user-images.githubusercontent.com/85564407/155619812-c50eadbd-991e-4e2e-8323-4877eaf20c90.gif](https://user-images.githubusercontent.com/85564407/155619812-c50eadbd-991e-4e2e-8323-4877eaf20c90.gif))
+![demo](https://user-images.githubusercontent.com/85564407/155619812-c50eadbd-991e-4e2e-8323-4877eaf20c90.gif)
 
-![virtual-keyboard-demo.gif](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/a4f8c778-d187-47bd-bc16-c7461163045a/virtual-keyboard-demo.gif)
-
-## 学んだこと
+## まとめ
 
 キーボードを `Keyboard` オブジェクトとして表現していく流れが綺麗すぎて感動しました。
+
+また、**VSCodeのHTMLファイル編集時、 `.keyboard__keys` と打つと自動的に `div class="keyboard__keys"` が生成される**など、コーディングの仕方でも参考になる箇所がいくつかありました。
+ひょっとして常識なんでしょうか。初めて知りました。
+
+英語も聞き取りやすく、解説が丁寧です。
+非常に良い動画でした。
+
+### 学んだこと
 
 - 仮想キーボードの考え方を理解した
     - アクティブ/非アクティブ状態を持つ
