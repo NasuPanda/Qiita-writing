@@ -639,6 +639,20 @@ JavaScriptによるDOM操作でレイアウトを作る場合、以下の流れ�
 
 ユーザーの文字列入力は `toUpperCase` で小文字/大文字の差異を吸収することが多めでした。
 
+### ボタン
+
+だいたい `cursor: pointer`。
+
+```css
+.check-btn:active {
+  transform: scale(0.98);
+}
+```
+
+クリックされた時若干小さくする。
+
+https://user-images.githubusercontent.com/85564407/156666412-67bc0ee4-778b-4018-a404-95a526ee1eeb.gif
+
 ### VSCodeの使い方
 
 VSCodeでHTMLを書く時、button.random-btn#randomと入力すると
