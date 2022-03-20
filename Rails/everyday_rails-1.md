@@ -351,3 +351,5 @@ factory :project do
 # 呼び出し（with_notesという名前）
 project = FactoryBot.create(:project, **:with_notes)**
 ```
+
+正直記事にするまでもない内容！！！
