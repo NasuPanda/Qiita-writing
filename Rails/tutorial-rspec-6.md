@@ -387,12 +387,6 @@ flash(成功時のメッセージ)が表示されていることを確認する�
   - 参考にした記事ではリクエストスペックで書いていました。
   - 正直UIとは言っても`flash`のためだけにシステムスペック書くのはどうだろう・・・と思いましたが、UIのテストはシステムスペックで統一したかったので。
 
-振り返ってみるとシステムスペック、リクエストスペックのどちらも無効なユーザーのデータをPOSTするテストがあるので、無効なユーザーのデータもFactoryBotで用意すれば良かったかもしれません。
-
-システムスペックで`fill_in`が4つ連なっていてかなり冗長なので、ヘルパーメソッドに切り出しても良いかもしれません。
-
-今後の実装で必要になりそうならリファクタリングします。
-
 # 8章 基本的なログイン機構
 
 ## RSpecで書き換える
@@ -638,12 +632,139 @@ expect(page).to have_link "Log out", href: logout_path
 expect(page).to have_link "Profile", href: user_path(user)
 ```
 
-
-
 # 9章 発展的なログイン機構
 
 ## RSpecで書き換える
 
+### 9.14
 
+連続でログアウト(ユーザーが別のタブでログアウト→他のタブで再度ログアウトしようとする、など)出来ることをテストします。
+
+```ruby:spec/requests/sessions_spec.rb
+  it "can log out in a row" do
+    # ログイン
+    get login_path
+    post login_path params: { session: { email: user.email,
+                                        password: user.password } }
+    expect(is_logged_in?).to be_truthy
+
+    # 連続ログアウト出来る
+    delete logout_path
+    delete logout_path
+    expect(response).to redirect_to root_path
+  end
+```
+
+### 9.17
+
+`authenticated?`メソッドがエラーを返さないことをテストします。
+
+```ruby:spec/models/user_spec.rb
+  describe "#authenticated?" do
+    it "returns false if digest is nil" do
+      expect(user.authenticated?("")).to_not be_truthy
+    end
+  end
+```
+
+### 9.25
+
+remember_meチェックボックスを実装したので、機能をテストします。
+
+```ruby:spec/system/sessions_spec.rb
+  describe "remember me" do
+    let(:user) { FactoryBot.create(:user) }
+
+    context "login with remember" do
+      it "stores the remember token in cookies" do
+        post login_path, params: { session: { email: user.email,
+                                              password: user.password,
+                                              remember_me: "1" }}
+        expect(cookies[:remember_token]).to_not be_blank
+      end
+    end
+
+    context "login without the remember" do
+      it "doesn't store the remember token in cookies" do
+        post login_path, params: { session: { email: user.email,
+                                              password: user.password,
+                                              remember_me: "0" } }
+        expect(cookies[:remember_token]).to be_blank
+      end
+    end
+  end
+```
+
+### 9.31
+
+`sessions_helper.rb`のテストを実装します。
+
+まずはスペックから`SessionsHelper`を使えるようにします。
+
+```ruby:spec/rails_helper.rb
+RSpec.configure do |config|
+  # 省略...
+  include ApplicationHelper
+  include SessionsHelper
+end
+```
+
+次に`SessionsHelper`のメソッド`current_user`に対するテストを書いていきます。
+
+```ruby:app/helpers/sessions_helper.rb
+module SessionsHelper
+  # 現在のユーザーを返す
+  def current_user
+    if (user_id = session[:user_id])
+      @current_user ||= User.find_by(id: user_id)
+    elsif (user_id = cookies.signed[:user_id])
+      user = User.find_by(id: user_id)
+      if user && user.authenticated?(cookies[:remember_token])
+        log_in user
+        @current_user = user
+      end
+    end
+  end
+```
+
+`current_user`は見ての通り複雑な条件分岐があります。
+現状テスト出来ていないのは 「`session`が空の時に正しいユーザーが返ってくるか」「`remember_digest`が間違っている時に現在のユーザーが`nil`になるかどうか」の2通りです。
+
+実装したテストは以下のようになります。
+
+```ruby:spec/helpers/sessions_helper_spec.rb
+require 'rails_helper'
+
+RSpec.describe ApplicationHelper, type: :helper do
+  describe "#current_user" do
+    let(:user) { FactoryBot.create(:user) }
+    before do
+      remember(user)
+    end
+
+    context "sessions is nil" do
+      it "returns right user" do
+        expect(user).to eq current_user
+        expect(is_logged_in?).to be_truthy
+      end
+    end
+
+    context "remember digest is wrong" do
+      it "returns nil" do
+        user.update_attribute(:remember_digest, User.digest(User.new_token))
+        expect(current_user).to be_nil
+      end
+    end
+  end
+
+end
+```
 
 ## 答え合わせ
+
+[コード例〜第9章〜｜RailsチュートリアルのテストをRSpecで書き換える](https://zenn.dev/fu_ga/books/ff025eaf9eb387/viewer/09bc4f)
+
+細かい書き方(`describe`や`context`によるテストのグループ化など)以外に大きな違いはありませんでした。
+
+# まとめ
+
