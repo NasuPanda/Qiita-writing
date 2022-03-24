@@ -737,6 +737,280 @@ end
 実装する時に「コレ`module`の中で分けられないかな・・・」とか思っていたのですが、当然のように出来ました。
 ちゃんと調べるべきでした。
 
+# 11章 アカウントの有効化
+
+## RSpecで書き換える
+
+### 11.4
+
+ユーザー有効化のために`activated` `activated_at` 属性をユーザーに追加したので、ファクトリに反映させます。
+
+```ruby:spec/factories/users.rb
+FactoryBot.define do
+  factory :user do
+    name { "Example User" }
+    email { "example@email.com" }
+    password { "securePassword" }
+    password_confirmation { "securePassword" }
+    admin { true }
+    activated { true }
+    activated_at { Time.zone.now }
+  end
+  # 省略...
+```
+
+### 11.20
+
+ユーザー有効化のためにメールを実装したので、そのテストを実装していきます。
+
+`rails g mailer`を実行した時、メイラー用のスペックが自動で生成されていました。
+
+```ruby:spec/mailers/user_mailer_spec.rb
+# 自動生成されたスペック
+RSpec.describe UserMailer, type: :mailer do
+  describe "account_activation" do
+    let(:mail) { UserMailer.account_activation }
+
+    it "renders the headers" do
+      expect(mail.subject).to eq("Account activation")
+      expect(mail.to).to eq(["to@example.org"])
+      expect(mail.from).to eq(["from@example.com"])
+    end
+
+    it "renders the body" do
+      expect(mail.body.encoded).to match("Hi")
+    end
+  end
+```
+
+上のコードをベースに、タイトル・メールの`from`/`to`・本文に含まれるべきテキストなどをテストすれば良さそうです。
+
+```ruby:spec/mailers/user_mailer_spec.rb
+RSpec.describe UserMailer, type: :mailer do
+  describe "account_activation" do
+    let(:user) { FactoryBot.create(:user)}
+    let(:mail) { UserMailer.account_activation(user) }
+    let(:from_address) { "noreply@example.com" }
+
+    it "sends to the user's email address" do
+      expect(mail.to).to eq [user.email]
+    end
+
+    it "sends with the correct subject" do
+      expect(mail.subject).to eq("Account activation")
+    end
+
+    it "sends from the correct email address" do
+      expect(mail.from).to eq [from_address]
+    end
+
+    describe "body" do
+      before do
+        user.activation_token = User.new_token
+      end
+      it "includes the user's name" do
+        expect(mail.body.encoded).to match(user.name)
+      end
+
+      it "includes the user's email" do
+        expect(mail.body.encoded).to match(CGI.escape(user.email))
+      end
+
+      it "includes the activation token" do
+        expect(mail.body.encoded).to match(user.activation_token)
+      end
+    end
+  end
+```
+
+#### エラー
+
+なお、最初にテストを実行したとき、以下のようなエラーを吐きました。
+
+```bash
+Failure/Error: <%= link_to "Activate", edit_account_activation_url(@user.activation_token,
+
+ActionView::Template::Error:
+  Missing host to link to! Please provide the :host parameter, set default_url_options[:host], or set :only_path to true
+```
+
+このエラーに対処するため、次のように設定を追記しました。
+
+```ruby:config/environments/test.rb
+# 追記
+config.action_mailer.default_url_options = { host: "localhost:3000"}
+```
+
+参考
+[rspec - Rails: Missing host to link to! Please provide :host parameter or set default_url_options[:host] - Stack Overflow](https://stackoverflow.com/questions/7219732/rails-missing-host-to-link-to-please-provide-host-parameter-or-set-default-ur)
+[Action Mailer の基礎 - Railsガイド](https://railsguides.jp/action_mailer_basics.html#action-mailer%E3%81%AE%E3%83%93%E3%83%A5%E3%83%BC%E3%81%A7url%E3%82%92%E7%94%9F%E6%88%90%E3%81%99%E3%82%8B)
+
+### 11.33
+
+ユーザー登録のテストにアカウント有効化を追加していきます。
+
+`User#create`のテスト。
+
+```ruby:spec/requests/users_spec.rb
+  describe "#create" do
+    let(:user) { FactoryBot.create(:user) }
+    let(:valid_user_params) { FactoryBot.attributes_for(:user) }
+    let(:invalid_user_params) { FactoryBot.attributes_for(:invalid_user) }
+
+    context "with valid information" do
+      before do
+        ActionMailer::Base.deliveries.clear
+      end
+
+      # 省略...
+
+      it "exists an email" do
+        post users_path, params: { user: valid_user_params }
+        expect(ActionMailer::Base.deliveries.size).to eq 1
+      end
+
+      it "hasn't yet been activated" do
+        post users_path, params: { user: valid_user_params }
+        expect(User.last).to_not be_activated
+      end
+```
+
+アカウント有効化のテスト。
+
+```ruby:spec/requests/account_activations_spec.rb
+RSpec.describe "AccountActivations", type: :request do
+  describe GET "/account_activations/id/edit" do
+    let(:valid_user_params) { FactoryBot.attributes_for(:user) }
+    before do
+      post users_path, params: { user: valid_user_params }
+      @user = controller.instance_variable_get(:@user)
+    end
+
+    context "with valid token and email" do
+      it "activates user" do
+        get edit_account_activation_path(@user.activation_token, email: @user.email)
+        @user.reload
+        expect(@user).to be_activated
+      end
+
+      it "redirects to users/id" do
+        get edit_account_activation_path(@user.activation_token, email: @user.email)
+        expect(response).to redirect_to user_path(@user)
+      end
+
+      it "can loge in" do
+        get edit_account_activation_path(@user.activation_token, email: @user.email)
+        expect(logged_in?).to be_truthy
+      end
+    end
+
+    context "with invalid attributes" do
+      it "doesn't log in with invalid token" do
+        get edit_account_activation_path("invalid_token", email: @user.email)
+        expect(logged_in?).to_not be_truthy
+      end
+
+      it "doesn't log in with invalid email" do
+        get edit_account_activation_path(@user.activation_token, email: "wrong email")
+        expect(logged_in?).to_not be_truthy
+      end
+    end
+  end
+end
+
+```
+
+`UsersController`の`create`アクションで定義されたインスタンス変数にアクセスするために、Railsチュートリアルでは`assigns`メソッドを使っていました。
+(DBから逐一ユーザーを取ってくるよりもインスタンス変数が扱えたほうが便利なので)
+
+ここでは`instance_variable_get`というメソッドを使ってアクセスしています。
+
+[Object#instance_variable_get (Ruby 3.1 リファレンスマニュアル)](https://docs.ruby-lang.org/ja/latest/method/Object/i/instance_variable_get.html)
+
+#### エラー
+
+テスト実行時に以下のエラーを吐きました。
+
+```bash
+NoMethodError:
+      undefined method `signed' for #<Rack::Test::CookieJar:0x00007fe62a914b38>
+```
+
+エラーの発生源は`sessions_helper.rb`の`current_user`メソッド(現在のユーザーを取得するメソッド)でした。
+`cookies.signed`の呼び出しでエラーが発生しているようです。
+
+[Railsアプリのテスト実行中に cookies.signed がエラー（undefined） になったときの対処法 - Qiita](https://qiita.com/yoshikouki/items/29c39ccccdc3a3814b17)
+
+↑の記事を参考に`spec/support/cookies.rb`を追加、次のコードを追記して対処しました。
+`Cookies`クラスの参照元が環境によって異なることが原因のようです。
+
+```spec/support/cookies.rb
+# RSpecでcookies.signedがエラーになる対処
+class Rack::Test::CookieJar
+  def signed
+    self
+  end
+end
+```
+
+### 11.3.3
+
+`users`で有効化されていないユーザーが表示されないこと。
+
+```ruby:spec/system/users_spec.rb
+  describe "GET /users" do
+    let!(:admin) { FactoryBot.create(:user) }
+    let!(:non_admin_user) { FactoryBot.create(:other_user) }
+
+    # 省略...
+
+    context "as a non-admin user" do
+      it "doesn't display inactivated user" do
+        inactivated_user = FactoryBot.create(:inactivated_user)
+        log_in non_admin_user
+        get users_path
+        expect(response.body).to_not include inactivated_user.name
+      end
+    end
+```
+
+有効化していないユーザーの詳細ページにアクセス出来ないこと。
+
+```ruby:spec/requests/users_spec.rb
+  describe "GET /users/id" do
+    let(:user) { FactoryBot.create(:user) }
+    let(:inactivated_user) { FactoryBot.create(:inactivated_user) }
+
+    context "visit inactivated user" do
+      it "redirects to root" do
+        log_in user
+        get user_path(inactivated_user)
+        expect(response).to redirect_to root_url
+      end
+    end
+  end
+```
+
+
+## 答え合わせ
+
+[コード例〜第11章〜｜RailsチュートリアルのテストをRSpecで書き換える](https://zenn.dev/fu_ga/books/ff025eaf9eb387/viewer/07a432)
+
+実装はほぼ一緒でした。
+
+# 12章 パスワードの再設定
+
+## RSpecで書き換え
+
+
+
+
+
+## 答え合わせ
+
+
+
+
 # まとめ
 
 スペックを書くときはだいたい以下を意識しておけば良さそうな気がします。
