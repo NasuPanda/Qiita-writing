@@ -1,3 +1,44 @@
+# はじめに
+
+Rails初学者の定番教材である[Railsチュートリアル](https://railstutorial.jp/)を完走しました。
+
+[Railsチュートリアルの読み物ガイド](https://railstutorial.jp/reading_guide)に目を通してみて、
+次のステップとして実践的なテストフレームワークであるRSpecについて学ぶことにしました。
+
+そして、[Everyday Rails](https://leanpub.com/everydayrailsrspec-jp)を購入し、基本的なスペックが一通り書けるようになるまで進めました。
+
+教材を通読・サンプルコードを書いた程度だとまだ理解が浅いので、
+実践を通じてRSpecの使い方を理解するために**RailsチュートリアルのテストをMinitestからRSpecに置き換えてみる**ことにしました。
+
+読み物ガイドで紹介されていた下の記事を答え合わせ的に使っていきます。
+
+https://zenn.dev/fu_ga/books/ff025eaf9eb387
+
+## 意識すること
+
+- 過度にDRYであることよりも可読性を重視する。
+    - ただ、ファクトリの扱いには慣れたいのでテストデータの用意はなるべくファクトリで。
+- Railsチュートリアルに縛られすぎない。
+    - 例えば「Railsチュートリアルがコントローラテストだったからコントローラスペックを書く」のような考え方は避ける。
+- まず動かし、次に正しくし、それから速くする([Make it work, make it right, make it fast](http://wiki.c2.com/?MakeItWorkMakeItRightMakeItFast))」を意識する
+    - Everyday Railsで紹介されていた格言です。
+    - 細かいところや便利なマッチャを使うことにこだわりすぎず、サクッとテストを書いてみる。
+
+## 環境
+
+Railsチュートリアルの環境をそのまま利用します。
+
+- Ruby 2.7.4
+- Ruby on Rails 6.0.4
+
+追加でインストールするgem
+
+- rspec-rails 5.1.1
+- FactoryBot 6.2.0
+- capybara 3.28.0
+- selenium-webdriver 3.142.4
+- webdrivers 4.1.2
+
 # 10章 ユーザーの更新・表示・削除
 
 ## RSpecで書き換える
