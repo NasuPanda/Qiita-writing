@@ -1262,3 +1262,51 @@ let(:admin) { FactoryBot.create(:user, :admin) }
 ## 変数名の変更
 
 不適切・意味がよくわからない変数名を変更しました。
+
+# まとめ
+
+正直、RSpecに書き換えるだけでここまで大変だとは思っていませんでした。
+
+- RSpecとMinitestの違い
+- 各Specの責務
+- どのように検証すれば良いのか
+  - テストしたい項目はわかっても、どうテストコードに落とし込めば良いのかわからない
+- `describe` `context` の粒度
+- exampleの名前
+  - なかなか一貫性を保てない
+- ファクトリの使い方
+
+などなど。
+挙げるとキリがありませんが、かなり苦戦しました。
+
+ですが、自分なりに試行錯誤しながらそれなりの規模のアプリケーションに対してテストを書いたことで、RSpecに対する理解はもちろん、ソフトウェアテストの片鱗くらいは理解出来た気がします。
+
+RSpecの基礎~書き換え時の参照先として、[Everyday Rails](https://leanpub.com/everydayrailsrspec-jp)には非常に助けられました。
+RSpecの基礎だけでなく、テストの考え方・原則まで幅広く学ぶことが出来ます。
+非常におすすめの教材です。これからRSpecを学ぶ方はぜひ。
+
+また、全体を通して回答例として利用させていただいた記事([RailsチュートリアルのテストをRSpecで書き換える](https://zenn.dev/fu_ga/books/ff025eaf9eb387))も非常に参考になりました。
+
+## 参考記事
+
+答え合わせ用に使用
+[RailsチュートリアルのテストをRSpecで書き換える](https://zenn.dev/fu_ga/books/ff025eaf9eb387)
+
+RSpecのREADME.md
+[https://github.com/rspec/rspec-rails](https://github.com/rspec/rspec-rails)
+
+システムスペック/フィーチャスペック/リクエストスペックの違い
+[System specs, feature specs, request specs–what’s the difference?](https://github.com/rspec/rspec-rails#system-specs-feature-specs-request-specswhats-the-difference)
+
+CapybaraのREADME.md
+[capybara/README.md at master · teamcapybara/capybara](https://github.com/teamcapybara/capybara/blob/master/README.md)
+
+使えるRSpec入門
+「Everyday Rails」の翻訳者である@jnchitoさんの書いた記事です。
+- [使えるRSpec入門・その1「RSpecの基本的な構文や便利な機能を理解する」 - Qiita](https://qiita.com/jnchito/items/42193d066bd61c740612)
+- [使えるRSpec入門・その2「使用頻度の高いマッチャを使いこなす」 - Qiita](https://qiita.com/jnchito/items/2e79a1abe7cd8214caa5)
+    - 一通り目を通したい。
+- [使えるRSpec入門・その3「ゼロからわかるモック（mock）を使ったテストの書き方」 - Qiita](https://qiita.com/jnchito/items/640f17e124ab263a54dd)
+    - モックをあまり理解出来ていないのでそのうち読む。
+- [使えるRSpec入門・その4「どんなブラウザ操作も自由自在！逆引きCapybara大辞典」 - Qiita](https://qiita.com/jnchito/items/607f956263c38a5fec24)
+    - 逆引き的に使う。
