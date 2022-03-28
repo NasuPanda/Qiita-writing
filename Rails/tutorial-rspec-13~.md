@@ -1162,7 +1162,7 @@ RSpec.describe "StaticPages", type: :system do
 
 下のコードがリファクタリング前の状態です。
 
-見ての通り、重複がとても多いです。
+必要になる度にとにかく足していったせいで、重複がとても多いです。
 そもそも不要なファクトリ(`many_users`、`other_user`など)もあります。
 
 ```ruby:spec/factories/users.rb
@@ -1259,9 +1259,79 @@ let(:admin) { FactoryBot.create(:user, :admin) }
 元となる`user`にシーケンスを追加したので、複数回呼び出した場合、勝手にユニークな値になってくれます。
 トレイトとして定義した`hoge`を呼ぶには、`create`メソッドに`(:user, :hoge)`を渡します。
 
-## 変数名の変更
+ちなみにtraitは「特徴・特性」などの意味を持ちます。
+「ある特徴・特性を持ったデータ」だからトレイトなんですね。
 
-不適切・意味がよくわからない変数名を変更しました。
+## スペックの切り出し
+
+フォロー関連のUIテストが`static_pages`にあるのはおかしいかと思い、別のスペックを作成、切り出しました。
+
+```ruby:spec/system/following_spec.rb
+require "rails_helper"
+
+RSpec.describe "StaticPages", type: :system do
+  before do
+    driven_by(:rack_test)
+  end
+
+  describe "/root" do
+    describe "following and followers" do
+      let(:user_with_relationships) { FactoryBot.create(:user, :with_relationships) }
+      let(:following) { user_with_relationships.following.count }
+      let(:followers) { user_with_relationships.followers.count }
+
+      it "displays statistics for following and followers" do
+        log_in user_with_relationships
+        expect(page).to have_content("#{following} following")
+        expect(page).to have_content("#{followers} followers")
+      end
+    end
+
+    describe "feed" do
+      let(:user) { FactoryBot.create(:user, :with_posts) }
+      before do
+        log_in user
+      end
+
+      it "displays correct feeds" do
+        visit root_path
+        user.feed.paginate(page: 1).each do |micropost|
+          expect(page).to have_content(CGI.escapeHTML(micropost.content))
+        end
+      end
+    end
+  end
+end
+```
+
+## その他
+
+- シンプルなミスの修正
+- exampleを具体的に
+  - テストの出力を見ただけでは中身がよくわからない箇所を改善しました。
+- exampleに一貫性を持たせる
+  - 例えば、「ログインしていない」状態のテストはあっても「ログインしている」状態のテストが無いため追加、など。
+- 英語の修正
+  - 「non-logged in user」は「anonymous user」と呼んだ方が適切([参考](https://www.quora.com/Whats-an-appropriate-word-for-a-non-logged-in-user))なようなので、修正しました。
+  - 「gest user」でも良かった？
+- 使用するメソッドに一貫性を持たせる
+  - 謎に`_path`/`_url`が混在していたので基本`_path`(相対パス)で統一しました。
+
+## 使えていない便利そうな機能達
+
+- `subject`
+  - テスト対象のオブジェクトを宣言、再利用出来るように。
+- `shared_example`
+  - exampleの再利用。
+- `shared_context`
+  - `context`の再利用。
+- モックとスタブ
+  - テストの速度改善、再現の難しいデータのテストに利用するらしい。
+- タグ
+  - 特定のテストだけ実行/スキップ可能。
+  - 新機能追加時など、既存のコードのテストをスキップしたい時に。
+- shoulda-matchersの利用
+  - EverydayRailsで推されている便利マッチャ。
 
 # まとめ
 
