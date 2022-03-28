@@ -1,3 +1,44 @@
+# はじめに
+
+Rails初学者の定番教材である[Railsチュートリアル](https://railstutorial.jp/)を完走しました。
+
+[Railsチュートリアルの読み物ガイド](https://railstutorial.jp/reading_guide)に目を通してみて、
+次のステップとして実践的なテストフレームワークであるRSpecについて学ぶことにしました。
+
+そして、[Everyday Rails](https://leanpub.com/everydayrailsrspec-jp)を購入し、基本的なスペックが一通り書けるようになるまで進めました。
+
+教材を通読・サンプルコードを書いた程度だとまだ理解が浅いので、
+実践を通じてRSpecの使い方を理解するために**RailsチュートリアルのテストをMinitestからRSpecに置き換えてみる**ことにしました。
+
+読み物ガイドで紹介されていた下の記事を答え合わせ的に使っていきます。
+
+https://zenn.dev/fu_ga/books/ff025eaf9eb387
+
+## 意識すること
+
+- 過度にDRYであることよりも可読性を重視する。
+    - ただ、ファクトリの扱いには慣れたいのでテストデータの用意はなるべくファクトリで。
+- Railsチュートリアルに縛られすぎない。
+    - 例えば「Railsチュートリアルがコントローラテストだったからコントローラスペックを書く」のような考え方は避ける。
+- まず動かし、次に正しくし、それから速くする([Make it work, make it right, make it fast](http://wiki.c2.com/?MakeItWorkMakeItRightMakeItFast))」を意識する
+    - Everyday Railsで紹介されていた格言です。
+    - 細かいところや便利なマッチャを使うことにこだわりすぎず、サクッとテストを書いてみる。
+
+## 環境
+
+Railsチュートリアルの環境をそのまま利用します。
+
+- Ruby 2.7.4
+- Ruby on Rails 6.0.4
+
+追加でインストールするgem
+
+- rspec-rails 5.1.1
+- FactoryBot 6.2.0
+- capybara 3.28.0
+- selenium-webdriver 3.142.4
+- webdrivers 4.1.2
+
 # 13章 ユーザーのマイクロポスト
 
 ### 13.4
@@ -640,6 +681,480 @@ FactoryBot.define do
 ```
 
 # 14章 フォロー機能
+
+## RSpecで書き換え
+
+### `relationship`のファクトリ
+
+テストを書く前に、`relationship`を生成するためのファクトリを用意します。
+
+`relationship`モデルを見ると、`User`の関連が`follower`、`followed`という名前になっていることがわかります。
+
+```ruby:app/models/relationship.rb
+class Relationship < ApplicationRecord
+  belongs_to :follower, class_name: "User"
+  belongs_to :followed, class_name: "User"
+end
+```
+
+このような場合は、ユーザーのファクトリに対して`aliases`を設定する必要があります。
+
+```ruby:spec/factories/users.rb
+FactoryBot.define do
+  factory :user , aliases: [:followed, :follower] do
+    sequence(:name) { |n| "Example User #{n}" }
+    sequence(:email) { |n| "example-#{n}@gmail.com" }
+    password { "securePassword" }
+    password_confirmation { "securePassword" }
+    activated { true }
+    activated_at { Time.zone.now }
+    # 省略...
+```
+
+`aliases`を設定すれば、`relationship`のファクトリからその名前で参照することが出来ます。
+
+```ruby:spec/factories/relationships.rb
+FactoryBot.define do
+  factory :relationship do
+    association :followed
+    association :follower
+  end
+end
+```
+
+`relationship`の生成をテストしてみます。
+
+```ruby:spec/models/relationship_spec.rb
+RSpec.describe Relationship, type: :model do
+  let(:relationship) { FactoryBot.create(:relationship) }
+  it "generates associated data" do
+    puts relationship.followed_id
+    puts relationship.followed.inspect
+    puts relationship.follower_id
+    puts relationship.follower.inspect
+  end
+end
+```
+
+```bash
+1
+#<User id: 1, name: "Example User 1", email: "example-1@gmail.com", created_at: "2022-03-26 23:06:12", updated_at: "2022-03-26 23:06:12", password_digest: [FILTERED], remember_digest: nil, admin: nil, activation_digest: "$2a$04$Ct2iBtdpHwOb/THvd94.Xu2JzFu.Jedghn2xC8pri9U...", activated: true, activated_at: "2022-03-26 23:06:12", reset_digest: nil, reset_sent_at: nil>
+2
+#<User id: 2, name: "Example User 2", email: "example-2@gmail.com", created_at: "2022-03-26 23:06:12", updated_at: "2022-03-26 23:06:12", password_digest: [FILTERED], remember_digest: nil, admin: nil, activation_digest: "$2a$04$F9nRxyV6hus7ReCquet4m.KquGhE8dRP0tyPzVO0WLC...", activated: true, activated_at: "2022-03-26 23:06:12", reset_digest: nil, reset_sent_at: nil>
+```
+
+問題無さそうです。
+
+### 14.4
+
+`relationship`のバリデーションに対するテストを書きます。
+
+```ruby:spec/models/relationship_spec.rb
+require 'rails_helper'
+
+RSpec.describe Relationship, type: :model do
+  describe "validation" do
+    let(:relationship) { FactoryBot.create(:relationship) }
+
+    context "with valid attributes" do
+      # 後で書く
+    end
+
+    context "with invalid attributes" do
+      it "is invalid without a follower_id" do
+        relationship.follower_id = nil
+        expect(relationship).to_not be_valid
+      end
+
+      it "is invalid without a followed_id" do
+        relationship.followed_id = nil
+        expect(relationship).to_not be_valid
+      end
+    end
+  end
+
+end
+```
+
+### 14.9
+
+`following`関連のメソッドをテストします。
+
+```ruby:spec/models/user_spec.rb
+  describe "#follow and #unfollow" do
+    let(:other_user) { FactoryBot.build(:user) }
+
+    it "can follow the other user" do
+      expect(user.following?(other_user)).to_not be_truthy
+      user.follow(other_user)
+      expect(user.following?(other_user)).to be_truthy
+    end
+
+    it "can unfollow the other user" do
+      user.follow(other_user)
+      expect(user.following?(other_user)).to be_truthy
+      user.unfollow(other_user)
+      expect(user.following?(other_user)).to_not be_truthy
+    end
+  end
+```
+
+### 14.13
+
+`followers`が正しく機能することをテストします。
+
+```ruby:spec/models/user_spec.rb
+  describe "#follow and #unfollow" do
+    let(:user) { FactoryBot.create(:user) }
+    let(:other_user) { FactoryBot.create(:user) }
+
+    it "can follow the other user" do
+      expect(user.following?(other_user)).to_not be_truthy
+
+      user.follow(other_user)
+
+      expect(user.following?(other_user)).to be_truthy
+      expect(other_user.followers.include?(user)).to be_truthy
+    end
+```
+
+### 14.2.2 演習
+
+プロフィールページとHomeページに `following`と`followers`の統計情報が正しく表示されていることをテストします。
+
+まずはファクトリでテストデータを用意します。
+
+```ruby:spec/factories/users.rb
+FactoryBot.define do
+  factory :user , aliases: [:followed, :follower] do
+    # 省略...
+    trait :with_relationships do
+      after(:create) do |user|
+        30.times do
+          other_user = create(:user)
+          user.follow(other_user)
+          other_user.follow(user)
+        end
+      end
+    end
+```
+
+コールバックを使い、
+他のユーザーを生成 → お互いにフォロー
+という流れを繰り返しています。
+
+`following`、`followers`のどちらかのみでも同じように実装出来ると思います。
+
+プロフィールページのテストを書きます。
+`"#{正しい数} following / followers"`という表示になっていることをテストします。
+
+```ruby:spec/system/users_spec.rb
+  describe "GET /users/id" do
+    describe "following and followers" do
+      let(:user_with_relationships) { FactoryBot.create(:user, :with_relationships) }
+      let(:following) { user_with_relationships.following.count }
+      let(:followers) { user_with_relationships.followers.count }
+
+      it "displays statistics for following and followers" do
+        log_in user_with_relationships
+        expect(page).to have_content("#{following} following")
+        expect(page).to have_content("#{followers} followers")
+      end
+    end
+  end
+```
+
+ホームページのテストを書きます。使い回しです。
+
+```ruby:spec/system/static_pages_spec.rb
+  describe "GET /users/id" do
+    describe "following and followers" do
+      let(:user_with_relationships) { FactoryBot.create(:user, :with_relationships) }
+      let(:following) { user_with_relationships.following.count }
+      let(:followers) { user_with_relationships.followers.count }
+
+      it "displays statistics for following and followers" do
+        log_in user_with_relationships
+        expect(page).to have_content("#{following} following")
+        expect(page).to have_content("#{followers} followers")
+      end
+    end
+  end
+```
+
+### 14.24
+
+フォロー/フォロワーページの認可をテストします。
+
+```ruby:spec/system/users_spec.rb
+  describe "GET /users/id/following" do
+    let(:user) { FactoryBot.create(:user) }
+
+    context "as a logged in user" do
+      # 後で書く
+    end
+
+    context "as a non-logged in user" do
+      it "redirects to login_path" do
+        get following_user_path(user)
+        expect(response).to redirect_to login_path
+      end
+    end
+  end
+
+  describe "GET /users/id/followers" do
+    let(:user) { FactoryBot.create(:user) }
+
+    context "as a logged in user" do
+      # 後で書く
+    end
+
+    context "as a non-logged in user" do
+      it "redirects to login_path" do
+        get followers_user_path(user)
+        expect(response).to redirect_to login_path
+      end
+    end
+  end
+```
+
+### 14.29
+
+`following`/`follower`ページ(フォローしているユーザー/フォロワーの一覧ページ)に対するテストを書きます。
+
+網羅的に書くのは難しいので、正しい数が表示されていること、正しいリンクが表示されていることのみテストします。
+
+`before`で`@following`/`@followers`を変数に入れておくとテストが読みやすくなると思ったので、そのようにしました。
+また、`@following`/`@followers`が空の場合、後のテストが実行されず通ってしまうので、空でないことを確認しています。
+
+```ruby:spec/system/users.rb
+  describe "GET /users/id/following" do
+    let(:user) { FactoryBot.create(:user) }
+
+    context "as a logged in user" do
+      before do
+        @user_with_relationships = FactoryBot.create(:user, :with_relationships)
+        @following = @user_with_relationships.following
+        log_in @user_with_relationships
+      end
+
+      it "displays the correct number of following user" do
+        visit following_user_path(@user_with_relationships)
+
+        # ここが空の場合後のテストが実行されないため
+        expect(@following).to_not be_empty
+
+        expect(page).to have_content("#{@following.count} following")
+        @following.paginate(page: 1).each do |follow|
+          expect(page).to have_link follow.name, href: user_path(follow)
+        end
+      end
+    end
+
+    # 省略...
+
+  describe "GET /users/id/followers" do
+    let(:user) { FactoryBot.create(:user) }
+
+    context "as a logged in user" do
+      before do
+        @user_with_relationships = FactoryBot.create(:user, :with_relationships)
+        @followers = @user_with_relationships.followers
+        log_in @user_with_relationships
+      end
+
+      it "displays the correct number of followers" do
+        visit followers_user_path(@user_with_relationships)
+
+        # ここが空の場合後のテストが実行されないため
+        expect(@followers).to_not be_empty
+
+        expect(page).to have_content("#{@followers.count} followers")
+        @followers.paginate(page: 1).each do |follower|
+          expect(page).to have_link follower.name, href: user_path(follower)
+        end
+      end
+    end
+```
+
+### 14.31
+
+リレーションシップのアクセス制御に対するテストを書きます。
+
+```ruby:spec/requests/relationships_spec.rb
+RSpec.describe "Relationships", type: :request do
+  describe "#create" do
+    context "as a logged in user" do
+      # 後で
+    end
+    context "as a non-logged in user" do
+      it "redirects to login_path" do
+        post relationships_path
+        expect(response).to redirect_to login_path
+      end
+
+      it "doesn't create a relationship" do
+        expect{
+          post relationships_path
+        }.to_not change(Relationship, :count)
+      end
+    end
+  end
+
+  describe "#destroy" do
+    let!(:relationship) { FactoryBot.create(:relationship) }
+    context "as a logged in user" do
+      # 後で
+    end
+    context "as a non-logged in user" do
+      it "redirects to login_path" do
+        delete relationship_path(relationship)
+        expect(response).to redirect_to login_path
+      end
+
+      it "doesn't delete a relationship" do
+        expect{
+          delete relationship_path(relationship)
+        }.to_not change(Relationship, :count)
+      end
+    end
+  end
+end
+```
+
+### 14.40
+
+Follow/Unfollowのテストを書きます。
+`post`/`delete`メソッドの引数として`xhr: true`を渡すことで、Ajaxでリクエストを発行するようにします。
+
+```ruby:spec/requests/relationships_spec.rb
+RSpec.describe "Relationships", type: :request do
+  describe "#create" do
+    context "as a logged in user" do
+      before do
+        @user = FactoryBot.create(:user)
+        @other_user = FactoryBot.create(:user)
+        log_in @user
+      end
+
+      it "creates a relationship by the standard way" do
+        expect{
+          post relationships_path, params: { followed_id: @other_user.id }
+        }.to change(Relationship, :count).by 1
+      end
+
+      it "creates a relationship by the Ajax" do
+        expect{
+          post relationships_path, params: { followed_id: @other_user.id }, xhr: true
+        }.to change(Relationship, :count).by 1
+      end
+    end
+    # 省略...
+
+  describe "#destroy" do
+    context "as a logged in user" do
+      before do
+        @user = FactoryBot.create(:user)
+        @other_user = FactoryBot.create(:user)
+        log_in @user
+      end
+
+      it "deletes a relationship by the standard way" do
+        @user.follow(@other_user)
+        created_relationship = @user.active_relationships.find_by(followed_id: @other_user.id)
+        expect{
+          delete relationship_path(created_relationship)
+        }.to change(Relationship, :count).by -1
+      end
+
+      it "deletes a relationship by the Ajax" do
+        @user.follow(@other_user)
+        created_relationship = @user.active_relationships.find_by(followed_id: @other_user.id)
+        expect{
+          delete relationship_path(created_relationship), xhr: true
+        }.to change(Relationship, :count).by -1
+      end
+    end
+```
+
+### 14.42
+
+ステータスフィードのテストを実装します。
+
+自身/フォローしているユーザーの投稿が表示されていること、フォローしていないユーザーの投稿が表示されないことをテストします。
+
+```ruby:spec/models_user_spec.rb
+  describe "#feed" do
+    let(:user) { FactoryBot.create(:user, :with_posts) }
+    let(:user_following) { FactoryBot.create(:user, :with_posts) }
+    let(:user_unfollowed) { FactoryBot.create(:user, :with_posts) }
+    before do
+      user.follow(user_following)
+    end
+
+    it "displays user's own posts" do
+      user.microposts.each do |post_self|
+        expect(user.feed).to be_include(post_self)
+      end
+    end
+
+    it "displays following user's posts" do
+      user_following.microposts.each do |post_following|
+        expect(user.feed).to be_include(post_following)
+      end
+    end
+
+    it "doesn't display unfollowed user's posts" do
+      user_unfollowed.microposts.each do |post_unfollowed|
+        expect(user.feed).to_not be_include(post_unfollowed)
+      end
+    end
+  end
+```
+
+フィードをテストするためには、投稿を持つユーザーを作成する必要があります。
+そこで、マイクロポストの表示テストの際に使用した `with_posts`トレイトを再利用しました。
+
+```ruby:spec/factories/users.rb
+FactoryBot.define do
+  factory :user , aliases: [:followed, :follower] do
+  # 省略...
+    trait :with_posts do
+      after(:create) { |user| create_list(:micropost, 31, user: user) }
+    end
+  end
+end
+```
+
+### 14.49
+
+フィードのHTMLをテストします。
+
+```ruby:spec/system/static_pages_spec.rb
+RSpec.describe "StaticPages", type: :system do
+  describe "root" do
+    describe "feed" do
+      let(:user) { FactoryBot.create(:user, :with_posts) }
+      before do
+        log_in user
+      end
+
+      it "displays correct feeds" do
+        visit root_path
+        user.feed.paginate(page: 1).each do |micropost|
+          expect(page).to have_content(CGI.escapeHTML(micropost.content))
+        end
+      end
+    end
+```
+
+## 答え合わせ
+
+[コード例〜第14章〜｜RailsチュートリアルのテストをRSpecで書き換える](https://zenn.dev/fu_ga/books/ff025eaf9eb387/viewer/18ab0c)
+
+フォロー/フォロワーや、投稿を持つユーザーを用意するファクトリの中身がかなり異なっていました。
+個人的にはコールバックで用意してしまう方が好みです。
+
 
 # リファクタリング
 
