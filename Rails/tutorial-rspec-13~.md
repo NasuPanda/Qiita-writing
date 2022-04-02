@@ -2,7 +2,7 @@
 
 Rails初学者の定番教材である[Railsチュートリアル](https://railstutorial.jp/)を完走しました。
 
-[Railsチュートリアルの読み物ガイド](https://railstutorial.jp/reading_guide)に目を通してみて、
+完走後、[Railsチュートリアルの読み物ガイド](https://railstutorial.jp/reading_guide)に目を通してみて、
 次のステップとして実践的なテストフレームワークであるRSpecについて学ぶことにしました。
 
 そして、[Everyday Rails](https://leanpub.com/everydayrailsrspec-jp)を購入し、基本的なスペックが一通り書けるようになるまで進めました。
@@ -1304,6 +1304,256 @@ RSpec.describe "StaticPages", type: :system do
 end
 ```
 
+## RuboCopの導入
+
+本筋からは逸れますが、いつかやろうと思っていたrubocopの導入もしてみます。
+
+### rubocopとは
+
+Rubyの静的コード解析をしてくれるgem。
+これを活用することで、チームのコーディング規約に準拠した開発が可能になる。
+
+### 導入
+
+`Gemfile` に記述、 `bundle install` 実行。
+
+```ruby
+group :development do
+  gem 'rubocop'
+	gem 'rubocop-rails' # rails用
+	gem 'rubocop-rspec' # rspec用
+	gem 'pre-commit'    # コミット自動実行
+end
+```
+
+### 基本コマンド
+
+```bash
+# 解析を走らせる
+$ rubocop
+# .rubocop_todo.ymlに警告を退避
+$ rubocop --auto-gen-config
+# 自動修正
+$ rubocop -a
+```
+
+### VSCodeと連携する
+
+`settings.json` に以下を追記（Rubyのインストールが必要）
+
+```bash
+// rubocop
+"ruby.useLanguageServer": true,
+"ruby.lint": {
+    "rubocop": true
+},
+"ruby.format": "rubocop"
+```
+
+### コミット時に自動で走らせる
+
+`pre-commit` gemを `bundle install` 後、次のコマンドを実行。
+
+```bash
+bundle exec pre-commit install
+git config pre-commit.checks rubocop # この変更はプロジェクト内にしか影響しない
+bundle exec pre-commit list
+```
+
+- `pre-commit install` では、 `.git/hooks/pre-commit` というファイルが作成される。
+- `git config pre-commit.checks robocop` によりコミット時に実行されるようになる。
+- `pre-commit list` によりコミット前に実行されるアクションを確認出来る。
+
+なお、設定を解除したい場合は `.git/hooks/pre-commit` ファイルを削除する。
+
+### 設定周り
+
+ルールが適用されるのは設定用ファイルよりも下の階層。基本ルートに置く。
+
+#### `.rubocop.yml`
+
+- 設定ファイル。
+- チームのコーディングスタイルに合ったルールをこのファイルで適用する。
+
+#### `.rubodop_todo.yml`
+
+あまりに警告が多い時に `rubocop --auto-gen-config` を実行することによって自動生成される。
+警告内容を全てこのファイル内に移動させることが出来る。それ以降、このファイルに移動した警告は無視される。
+
+### RuboCopを活用した修正の流れ
+
+> ⓪　**`$ rubocop --auto-correct`** を実行して、自動で修正できるものはしてもらう。残りの警告がたくさんある場合> は①へ。警告がそんなに多くない場合(10~20個とか)は③と④を繰り返す。(Railsのコード規則を学ぶのにとても良い教材だと思> うので初めは⓪を飛ばすことをお勧めします。)
+> 
+> ①　警告がたくさんあると見ずらいので **`$ rubocop --auto-gen-config`**を実行して `.rubocop_todo.yml`を作> 成、そこに全ての警告をいったん移す。(こうすることで **`$ rubocop`**を実行しても今の段階では全ての警告は無視され> ます。)
+> 
+> ②　`.rubocop_todo.yml` 内の警告の中から一番上の警告をコメントアウトする。(コメントアウトした警告だけが再び> RuboCopに感知されるようになる)
+> 
+> ③　**`$ rubocop`** を実行して警告を修正する。
+> 
+> ④　警告のデフォルトを変更したり、特定のファイルを今後RuboCopに警告されないたくないという場合は, `.rubocop.yml`> に設定を書く。
+> 
+> ⑤　修正し終わったら `.rubocop_todo.yml` に戻り、コメントアウトした警告を削除する。
+> 
+> ⑥　`.rubocop_todo.yml` 内の全ての警告を修正し終わるまで②~⑤を繰り返す。
+> 
+> ⑦　テストがある場合はテストを走らせる。
+> 
+> 参考 : [RuboCop is 何？ - Qiita](https://qiita.com/tomohiii/items/1a17018b5a48b8284a8b)
+
+### 警告例
+
+### [Layout::ArgumentAlignment](https://www.rubydoc.info/gems/rubocop/RuboCop/Cop/Layout/ArgumentAlignment)
+
+複数行に渡るメソッド定義は先頭が揃えてあること。
+
+```ruby
+# godd
+validates :image,
+            content_type: {
+              in: %w[image/jpeg image/gif image/png],
+              message: "must be a valid image format"
+            }
+
+# bad
+validates :image,
+    content_type: {
+      in: %w[image/jpeg image/gif image/png],
+      message: "must be a valid image format"
+    }
+```
+
+### [RuboCop | Style/GuardClause - Qiita](https://qiita.com/tbpgr/items/69c3830586fbe555b374)
+
+メソッド内における`if/unless` 内の処理が1行以上の場合、 `return if hoge` を使うようにすること。
+
+✅ 「処理が4行以上の場合」に変更した。
+
+```ruby
+# bad
+def test
+  if something
+    a = 1
+    print a
+    work
+  end
+end
+
+# good
+def test
+  return unless something
+  a = 1
+  print a
+  work
+end
+```
+
+### Layout/TrailingEmptyLines
+
+ファイルの最後には空行があること。
+
+### Style/MultilineTernaryOperator
+
+- Style/MultilineTernaryOperator: Avoid multi-line ternary operators, use if or unless instead.
+    - `condition ? something : else` は複数行で使わない
+
+### Style/RedundantReturn
+
+- Style/RedundantReturn: Redundant return detected.
+    - 無駄な `return` 。明示的にあったほうがわかりやすいと思うなら設定外す。
+
+```ruby
+# bad
+def self.digest(string)
+  cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST :
+                                                BCrypt::Engine.cost
+  BCrypt::Password.create(string, cost: cost)
+end
+
+# good
+def self.digest(string)
+  if ActiveModel::SecurePassword.min_cost
+    BCrypt::Password.create(string, cost: BCrypt::Engine::MIN_COST)
+  else
+    BCrypt::Password.create(string, cost: BCrypt::Engine.cost)
+  end
+end
+```
+
+### [Lint::AmbiguousOperator](https://www.rubydoc.info/gems/rubocop/RuboCop/Cop/Lint/AmbiguousOperator)
+
+メソッドの引数として渡される、曖昧なオペレーターの呼び出しを検知する。
+
+```ruby
+# bad
+expect {
+    user.destroy
+	}.to change(Micropost, :count).by -1
+
+# good
+expect {
+    user.destroy
+	}.to change(Micropost, :count).by(-1)
+```
+
+# RSpec
+
+### RSpec/ExampleLength
+
+1exampleの行数。デフォルトだと厳しすぎる。
+
+```ruby
+# 1exampleの行数
+# デフォルトだと厳しすぎる
+RSpec/ExampleLength:
+  Max: 8
+```
+
+### Metrics/BlockLength
+
+1ブロックあたりの行数。専用のDSLで記述する関係上、デフォルトは現実的ではない。
+
+ので、RSpecのみ除外する。
+
+```ruby
+# RSpecのみ1ブロックあたりの行数超過を許可
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+```
+
+### RSpec/DescribedClass
+
+`described_class` は `describe` で指定したクラスを指す。
+
+クラスをそのまま指定するよりも明示的でわかりやすい。
+
+```ruby
+# bad
+RSpec.describe User do
+  subject {User.new}
+end
+
+# good
+RSpec.describe User do
+  subject {described_class.new}
+end
+```
+
+### 感想
+
+Railsチュートリアル+RSpec書き換え終了時点で走らせたら警告多すぎてびっくりしました。
+
+「厳しすぎやろ！」と思うものから「なるほどな〜」となるものまで、様々でした。
+自分/チームが気持ちよく開発出来るような`.rubocop.yml`を作り上げていきたいです。
+
+### 参考記事
+
+- [RuboCop is 何？ - Qiita](https://qiita.com/tomohiii/items/1a17018b5a48b8284a8b)
+- [RuboCopの設定アレコレ - Qiita](https://qiita.com/necojackarc/items/8bc16092bbc69f17a16d)
+- [RuboCop設定参考](https://qiita.com/piggydev/items/8a9f5cd4486861819a69#rubocopyml-%E8%A8%AD%E5%AE%9A%E4%BE%8B)
+- [VSCodeでRubocopを使う - Qiita](https://qiita.com/d0ne1s/items/a3566aca023d11f2bfc4)
+- [styleguide/ruby.ja.md at master · cookpad/styleguide](https://github.com/cookpad/styleguide/blob/master/ruby.ja.md)
+
 ## その他
 
 - シンプルなミスの修正
@@ -1322,14 +1572,16 @@ end
 - `subject`
   - テスト対象のオブジェクトを宣言、再利用出来るように。
 - `shared_example`
-  - exampleの再利用。
+  - exampleの宣言、再利用。
 - `shared_context`
-  - `context`の再利用。
+  - `context`の宣言、再利用。
 - モックとスタブ
-  - テストの速度改善、再現の難しいデータのテストに利用するらしい。
+  - モックはDBへアクセスするような処理を減らすために使う。
+  - スタブはオブジェクトのメソッドをオーバーライドし、テスト用の結果を返すダミーメソッド。DBやネットワークを使う処理が対象。
+  - テストの速度改善や、再現の難しいデータのテストなどに利用すると良いらしい。
 - タグ
-  - 特定のテストだけ実行/スキップ可能。
-  - 新機能追加時など、既存のコードのテストをスキップしたい時に。
+  - 特定のテストだけ実行/スキップ。
+  - 新機能を追加する時、既存のコードのテストをスキップしたい時など。
 - shoulda-matchersの利用
   - EverydayRailsで推されている便利マッチャ。
 
@@ -1337,21 +1589,21 @@ end
 
 正直、RSpecに書き換えるだけでここまで大変だとは思っていませんでした。
 
-- RSpecとMinitestの違い
-- 各Specの責務
+- RSpecとMinitestの構文や使い方の違い
+- 各Specの役割
 - どのように検証すれば良いのか
   - テストしたい項目はわかっても、どうテストコードに落とし込めば良いのかわからない
 - `describe` `context` の粒度
 - exampleの名前
   - なかなか一貫性を保てない
-- ファクトリの使い方
+- テスト用データの用意
 
 などなど。
 挙げるとキリがありませんが、かなり苦戦しました。
 
 ですが、自分なりに試行錯誤しながらそれなりの規模のアプリケーションに対してテストを書いたことで、RSpecに対する理解はもちろん、ソフトウェアテストの片鱗くらいは理解出来た気がします。
 
-RSpecの基礎~書き換え時の参照先として、[Everyday Rails](https://leanpub.com/everydayrailsrspec-jp)には非常に助けられました。
+RSpecの基礎学習から書き換え時の参照先として、[Everyday Rails](https://leanpub.com/everydayrailsrspec-jp)には非常に助けられました。
 RSpecの基礎だけでなく、テストの考え方・原則まで幅広く学ぶことが出来ます。
 非常におすすめの教材です。これからRSpecを学ぶ方はぜひ。
 
