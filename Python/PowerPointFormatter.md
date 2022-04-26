@@ -135,7 +135,7 @@ python-pptxはその名の通りPythonからPowerPointを操作出来るライ�
 基本的な構成は上のイメージです。
 図形やテキストボックス等の1つ1つの要素はShapeオブジェクトとして管理されています。
 
-#### Presentation
+#### `Presentation`
 
 何をするにもまずは`Presentation`オブジェクトにアクセスします。
 
@@ -150,7 +150,7 @@ prs = pptx.Presentation()
 prs.save('./sample.pptx')
 ```
 
-#### Slides
+#### `Slides`
 
 ファイルを構成する全てのスライドは`Slides`で管理されています。
 
@@ -165,7 +165,7 @@ slide = slides[0]
 added_slide = slides.add_slide(side_layouts)
 ```
 
-#### SlideLayout
+#### `SlideLayout`
 
 `SlideLayout`はスライドのプレースホルダ(雛形みたいなもの)です。
 `Presentation`からアクセスします。
@@ -181,7 +181,7 @@ layout = prs.slide_layouts[0]
 layout = prs.slides.get_by_name("白紙")
 ```
 
-### Shape
+### `Shape`
 
 [Shapes — python-pptx 0.6.21 documentation](https://python-pptx.readthedocs.io/en/latest/api/shapes.html#shape-objects-in-general)
 
@@ -566,11 +566,23 @@ window = sg.Window(layout=[[file_browse]], **WINDOW_STYLES)
 
 ### 設計
 
+2グループ/1スライド & 4枚の画像/1グループ
 
+![image_2グループ](https://user-images.githubusercontent.com/85564407/165007671-73ed03f0-e2bf-4bf4-9327-0478dc17cff6.png)
 
-### GUI
+1グループ/1スライド & 8枚の画像/1グループ
 
+![image_1グループ](https://user-images.githubusercontent.com/85564407/165007711-6dc27749-4be0-4cc4-84d3-084a16ddfe50.png)
 
+TODO TypedDictについて
+
+### PowerPoint読み込み
+
+TODO 概要を書く
+
+### 出力用の情報を設定
+
+TODO 画像を使ってグループ名/ラベル名を設定したことを書く
 
 ### PowerPoint書き込み
 
@@ -590,6 +602,12 @@ window = sg.Window(layout=[[file_browse]], **WINDOW_STYLES)
   - `add_slide`には`SlideLayout`が必要。
 - 表を作ってその中に画像を入れることが多い関係で、置換対象以外の図形は残しておきたい。
   - 何故か表の中に画像を配置することが多いのです。見栄えが良いからでしょうか。
+
+### GUI
+
+TODO 外観を示す
+TODO どこでどういったイベントが実行されるのか説明
+
 
 ## 工夫点
 
@@ -642,14 +660,14 @@ window = sg.Window(layout=[[file_browse]], **WINDOW_STYLES)
 - Web開発学習中のため、新しいテストフレームワークの使い方を覚えたくない
 - 早く完成させたい
 
-などの理由でテストを書かないことにしました。
+という理由でテストを書かないことにしました。
 
-この選択を開発中に何度も後悔しました。
+この選択は開発中に何度も後悔しました。
 テストを書かないことのデメリットは挙げるとキリがありませんが、例えば以下のような不便さを感じました。
 
 - エラーがどこで起きているのか理解するまで時間がかかる
 - 動作を確認するために軽いスクリプトを書く/GUIを操作する必要があり面倒
-- 要件がハッキリしていないため(設計の問題でもある)、不要なメソッドを実装してしまう
+- 要件がハッキリしないため(設計の問題でもある)、不要なメソッドを実装してしまうことがあった
 
 今から書くのはちょっと面倒なので書きませんが、今後は何があろうがテストを書こうと決心しました。
 
@@ -657,10 +675,8 @@ window = sg.Window(layout=[[file_browse]], **WINDOW_STYLES)
 
 主にクラスの役割の話になります。
 
-SlideやImageなどのオブジェクトがあり、それ自体やその集合を持つクラスがあるという関係はそこそこ良い(と思っている)のですが、
-
 - 画像・テキストボックスの整理を担当するクラス
-- 「オブジェクトを所有するクラス」のオブジェクトへのアクセスの仕方
+- 「オブジェクトを所有するクラス」がオブジェクトへアクセスする方法
 
 など、振り返ってみると雑な点が目に付きます。
 
@@ -669,24 +685,23 @@ SlideやImageなどのオブジェクトがあり、それ自体やその集合�
 
 ### 追加要望があった機能
 
-以下のような要望がありました。随時追加していきます。
-
-- 画像のトリミング
-  - トリミングしてから貼ることが多い人もいるため。
-- テキストボックスのフォント・サイズ維持
-  - フォント情報の取得を忘れていたため置換されるテキストはデフォルト設定になってしまう。
+現時点では画像のトリミング機能を追加して欲しいという要望を受けました。
+随時追加していきたいです。
 
 ## 参考記事
 
 embeddable python
-[超軽量、超高速な配布用Python「embeddable python」 - Qiita](https://qiita.com/mm_sys/items/1fd3a50a930dac3db299)
-[4. Windows で Python を使う — Python 3.10.4 ドキュメント](https://docs.python.org/ja/3/using/windows.html#the-embeddable-package)
+
+- [超軽量、超高速な配布用Python「embeddable python」 - Qiita](https://qiita.com/mm_sys/items/1fd3a50a930dac3db299)
+- [4. Windows で Python を使う — Python 3.10.4 ドキュメント](https://docs.python.org/ja/3/using/windows.html#the-embeddable-package)
 embeddable python へtkinterを導入
-[Python embeddable zip: install Tkinter - Stack Overflow](https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter)
+
+- [Python embeddable zip: install Tkinter - Stack Overflow](https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter)
 
 Python 型定義・ヒント
-[[Python3.8～]ビルトインのTypedDictについて詳しく調べてみた（PEP589） - Qiita](https://qiita.com/simonritchie/items/63218b0a5c4a3d3632a1)
-[[Python]PylanceのVS Code拡張機能をさっそく使ってみた。 - Qiita](https://qiita.com/simonritchie/items/33ca57cdb5cb2a12ae16)
+
+- [[Python3.8～]ビルトインのTypedDictについて詳しく調べてみた（PEP589） - Qiita](https://qiita.com/simonritchie/items/63218b0a5c4a3d3632a1)
+- [[Python]PylanceのVS Code拡張機能をさっそく使ってみた。 - Qiita](https://qiita.com/simonritchie/items/33ca57cdb5cb2a12ae16)
 
 
 
