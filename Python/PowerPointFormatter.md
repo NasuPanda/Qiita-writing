@@ -1,18 +1,18 @@
 # はじめに
 
-python-pptxとPySimpleGUIを使って、PowerPointで指定したフォーマットに画像を貼り付ける事ができるツールを作ったので紹介します。
+python-pptxとPySimpleGUIを使って**PowerPointで指定したフォーマットに画像を貼り付けるツール**を作ったので紹介します。
 
 ## 開発の経緯
 
 現職では主に製品の実証試験的な業務を担当しています。
-業務の性質上、エビデンスとして画像を撮影 → PowerPoint(報告用)に貼り付ける という作業が多く発生します。。
+業務の性質上、エビデンスとして画像を撮影 → PowerPoint(報告用)に貼り付ける という作業が多く発生します。
 
-そういった作業が多くあるので既に効率化は図られていて、「枚数を指定すると定間隔で画像を貼り付けてくれるツール」は存在します。(他部署が作成)
+そういった作業が多くあるので既に効率化は図られていて、「枚数を指定すると一定間隔で画像を貼り付けてくれるツール」は存在します。(他部署が作成)
 
 しかし、実際に報告資料を作成する際に欲しいのは**決まったフォーマット・画像の配置**であることが多いです。
-そのため、定間隔で貼り付けることが出来たとしてもそれをそのまま報告に使うことはほとんど出来ず、結局手作業で画像をペタペタしている人が多くいます。
+そのため、一定間隔で貼り付けることが出来たとしてもそれをそのまま報告に使うことはほとんど出来ず、結局手作業で画像をペタペタしている人が多くいます。
 
-そこで、上司に相談して、
+そこで、上司に相談したり職場の方に聞き込みをしたりして、
 
 ①フォーマットを自由に指定出来る
 ②PowerPointを使って(=誰でも使える)フォーマットを指定できる
@@ -93,12 +93,9 @@ fruits_1の場合は「fruits」がデータ名、「1」がラベル(連番)と
 2枚目
 ![順に貼り付け_出力 2](https://user-images.githubusercontent.com/85564407/165010628-b2cc1a2c-2767-4cdc-ac12-31311f456887.png)
 
-### 動作サンプルに使用した画像
-
-- [【フリーアイコン】 フルーツ](https://sozai.cman.jp/icon/food/fruits/)
-- [【フリーアイコン】 矢印（上下左右）](https://sozai.cman.jp/icon/arrow/base1/)
-
 # 実装
+
+https://github.com/NasuPanda/powerpoint-generator
 
 ## 動作環境
 
@@ -110,11 +107,10 @@ fruits_1の場合は「fruits」がデータ名、「1」がラベル(連番)と
 - PySimpleGUI 4.59.0
 
 必要なライブラリをインストールします。
-僕はpipenvを使っているのでpipenvでインストールしました。適宜読み替えてください。
 
 ```shell
-pip install python-pptx
-pip install PySimpleGUI
+pipenv install python-pptx
+pipenv install PySimpleGUI
 ```
 
 ## python-pptx
@@ -132,12 +128,12 @@ python-pptxはその名の通りPythonからPowerPointを操作出来るライ�
 > ![about-python-pptx](https://www.shibutan-bloomers.com/wp-content/uploads/2021/10/634b5ac5a6b977e5b32c1c9b8ad3c941.png)
 > https://www.shibutan-bloomers.com/python-libraly-pptx-5/1188/より
 
-基本的な構成は上のイメージです。
+PowerPointの基本的な構成は上のようなイメージになっています。
 図形やテキストボックス等の1つ1つの要素はShapeオブジェクトとして管理されています。
 
 #### `Presentation`
 
-何をするにもまずは`Presentation`オブジェクトにアクセスします。
+まずは`Presentation`オブジェクトにアクセスします。
 
 ```python
 # 引数として渡したPowerPointを開く
@@ -167,7 +163,7 @@ added_slide = slides.add_slide(side_layouts)
 
 #### `SlideLayout`
 
-`SlideLayout`はスライドのプレースホルダ(雛形みたいなもの)です。
+`SlideLayout`はスライドのプレースホルダです。
 `Presentation`からアクセスします。
 
 主に`Slides.add_slide`でスライドを追加する時に使います。
@@ -250,8 +246,8 @@ p.font.bold = True		                               # font.boldプロパティに
 デフォルトではemu(English Metric Units)という単位を使用しています。
 1 cm = 360000 emuです。
 
-基本的には座標情報の取得 → 図形挿入をするだけなので、デフォルト単位のemuで問題なかったです。
-サイズを手打ちで指定したいときなど、人間が見やすく加工する必要があれば`pptx.util`を`importしてきて変換することも出来ます`。
+今回は座標情報の取得 → 図形挿入をするだけなので、デフォルト単位のemuで問題なかったです。
+サイズを直接指定したいときなど、人間がわかりやすいように加工する必要があれば`pptx.util`を`import`してきて変換することも出来ます。
 
 * `Cm` : cm単位
 * `Inches` : インチ単位
@@ -275,7 +271,7 @@ Cm(enum)
 
 [Python-pptx: copy slide - Stack Overflow](https://stackoverflow.com/questions/50866634/python-pptx-copy-slide)を参考にしました。
 
-PowerPointに詳しくなりたいわけではないので、ややこしい実装はStackOverFlowの力を借りました。
+PowerPointの仕様に詳しくなりたいわけではないので、複雑な実装はStackOverFlowの力を借りました。
 
 ```py
 base_slide = prs.slides[base_slide_index]
@@ -353,7 +349,6 @@ PySimpleGUIも使い方は公式ドキュメントにだいたい載っていま
 
 基本的な使い方の参考になりそうな記事
 
-- [PySimpleGUIでGUIアプリを作ってみた ~その1~](https://it-for-pharma.com/pysimplegui%e3%81%a7gui%e3%82%a2%e3%83%97%e3%83%aa%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f-%e3%81%9d%e3%81%ae1)
 - [Pythonでも簡単にGUIは作れる - Qiita](https://qiita.com/konitech913/items/61dc715ddaad54505a29)
 - [Tkinterを使うのであればPySimpleGUIを使ってみたらという話 - Qiita](https://qiita.com/dario_okazaki/items/656de21cab5c81cabe59)
 - [マイブームPySimpleGUIを紹介｜eetann｜note](https://note.com/hideharu092/n/n9dc1c1075a7b)
@@ -409,24 +404,24 @@ def enable(self, key):
 `True`にすることで要素を使用不可にできます。
 
 ```py
-sg.InputText("入力してね", disabled=True)
+sg.FolderBrowse("フォルダ選択", disabled=True)
 ```
 
 ![disabled_toggle](https://user-images.githubusercontent.com/85564407/165041080-b6edf979-41f2-4533-a357-9314d9559d5a.gif)
 
-普通に隠したい場合は`visible`を`False`にすれば良いですが、操作して欲しくないけど隠したくもない箇所に対してはこちらを使います。
+普通に要素を隠したい場合は`visible`を`False`にすれば良いですが、操作して欲しくないけど隠したくもない箇所に対してはこちらを使います。
 
 ### `enable_events`
 
 `True`にすることで通常イベントが発火しない要素でイベントを扱う事ができます。
 
 ```py
-sg.InputText("イベントが有効な要素", enable_events=True)
+sg.InputText("イベントの有効化", enable_events=True)
 ```
 
 #### 例 `FolderBrowse`と`InputText`
 
-`enable_events`を使う場面として、`InputText`によりフォルダ入力を受け取る場合が挙げられます。
+`enable_events`を使う場面として、`InputText`によりフォルダパスの入力を受け取るというケースが挙げられます。
 
 [FolderBrowse](<https://pysimplegui.readthedocs.io/en/latest/call%20reference/#:~:text=returns%20a%20button-,FolderBrowse,-(button_text%20%3D%20%22Browse%22%2C%0A%20%20%20%20target>)というボタンを使うと、ユーザーが入力したフォルダパスを`InputText`に受け取る事ができます。
 
@@ -448,11 +443,11 @@ sg.InputText("イベントが有効な要素", enable_events=True)
 
 ### スタイルを辞書に切り出す
 
-PySimpleGUIは、コンポーネントのスタイルをインスタンス化する際に引数として渡すことで設定します。
+PySimpleGUIは、コンポーネントをインスタンス化する際にスタイルなどの設定を引数として渡すことで設定を行います。
 
-小規模なGUIならむしろわかりやすくて良いのですが、ある程度以上の規模になってくるとスタイルの指定やデフォルトで使用不可な要素の設定がわかりにくいという問題が発生しがちです。
+小規模なGUIならむしろわかりやすくて良いのですが、ある程度以上の規模になってくるとスタイルやデフォルトの要素の状態などの設定がわかりにくいという問題が発生しがちです。
 
-次のコードは公式cookbookから拝借してきたものですが、結構わかりにくい気がします。
+次のコードは公式cookbookから拝借してきたものですが、そこそこわかりにくい感じがします。
 
 > ```py
 > import PySimpleGUI as sg      
@@ -515,7 +510,7 @@ PySimpleGUIは、コンポーネントのスタイルをインスタンス化す
 
 それを解決するために辞書を使います。
 
-Pythonでは`**kwargs`のように`**`をつけた引数を定義すると、任意の数のキーワード引数を指定することが出来るようになります。
+Pythonでは`**kwargs`のように`**`をつけて引数を定義すると、任意の数のキーワード引数を受け取ることが出来るようになります。
 関数呼び出し時に辞書オブジェクトに**をつけて引数に指定することで、key⇔valueのペアをキーワード⇔引数のペアとして関数に渡せるのです。
 
 > ```py
@@ -545,44 +540,144 @@ WINDOW_STYLES = {
     "resizable": True,
 }
 
-PWT_BROWSE_STYLES = {
-    "INPUT_TEXT": {
-        "key": "-USER_UTIL_PWT-",
-        "enable_events": True,
-        "disabled": True,
-        "size": (30, 1),
-    },
-    # ...
-}
-
-# スタイルを展開して渡す
-file_browse = sg.FileBrowse("ファイル選択", **PWT_BROWSE_STYLES["FILE_BROWSE"])
-window = sg.Window(layout=[[file_browse]], **WINDOW_STYLES)
+window = sg.Window(layout=[layout], **WINDOW_STYLES)
 ```
 
 このようにすることで、似たようなスタイルの場合使い回せる、スタイルの変更が容易になるなどのメリットがあります。
 
 ## 実装内容
 
-### 設計
+### PowerPointの情報を管理する
 
-2グループ/1スライド & 4枚の画像/1グループ
+スライドが持つコンテンツの管理については、次のようなイメージで実装しました。
 
 ![image_2グループ](https://user-images.githubusercontent.com/85564407/165007671-73ed03f0-e2bf-4bf4-9327-0478dc17cff6.png)
 
-1グループ/1スライド & 8枚の画像/1グループ
+`Slide`クラスがコンテンツを持ち、コンテンツがグループ分けされていて、各コンテンツがサイズ・座標・ラベルなどを持つ、というイメージです。
 
-![image_1グループ](https://user-images.githubusercontent.com/85564407/165007711-6dc27749-4be0-4cc4-84d3-084a16ddfe50.png)
+画像やテキストボックスについては`TypedDict`という通常の辞書よりも厳密に型を定義出来る型ヒントを使いました。
 
-TODO TypedDictについて
+```py:content.py
+from typing import TypedDict
+
+
+class SlideContent(TypedDict):
+    """スライドコンテンツ
+    """
+    coordinates: tuple[int, int]
+    size: tuple[int, int]
+    label: str
+
+
+# total=False: 辞書初期化時などにキーが必須で無くなる
+class Image(SlideContent):
+    """画像
+    """
+    path: str
+
+
+class TextBox(SlideContent):
+    """テキストボックス
+    """
+    text: str
+```
 
 ### PowerPoint読み込み
 
-TODO 概要を書く
+前述の`shape_type`判定と`shape`のサイズ・座標取得を行うクラスを作りました。
 
-### 出力用の情報を設定
+```py:presentation.py
+class PresentationReader():
+    """PowerPointの情報を読み取る。
+    """
+    def __init__(self, path: str) -> None:
+        self.prs: Presentation = Presentation(path)
 
-TODO 画像を使ってグループ名/ラベル名を設定したことを書く
+    def get_image_templates(self, slide_index=0) -> list[Image]:
+        """スライドが持つ画像の情報を取得"""
+        try:
+            shapes = self.prs.slides[slide_index].shapes
+        except IndexError:
+            raise IndexError("slide index out of range")
+
+        image_templates = []
+
+        for shape in shapes:
+            if shape.shape_type != MSO_SHAPE.RECTANGLE,:
+                continue
+            if not shape.text:
+                continue
+            image_templates.append(self.__set_content("image", shape))
+
+        return image_templates
+
+    def __set_content(self, content_type: str, shape) -> Image | TextBox:
+        if content_type == "image":
+            return Image(
+                coordinates=(shape.left, shape.top),
+                size=(shape.width, shape.height),
+                label=shape.text,
+                path=""
+            )
+        if content_type == "textbox":
+            return TextBox(
+                coordinates=(shape.left, shape.top),
+                size=(shape.width, shape.height),
+                label=shape.text,
+                text=shape.text
+            )
+
+    # 省略...
+```
+
+### 出力用のスライド情報をセット
+
+画像ファイル名とPowerPointからの入力を使ってデータ名、`Image`、`TextBox`等の情報を持つ`Slide`を生成することで、出力用の情報をひとまとめにする形にしました。
+
+#### テキストの置換
+
+```py:slide.py
+    # 省略...
+    def set_textboxes_to_slides(self):
+        """スライドに対してテキストボックスをセットする。
+        """
+        for slide in self.slides:
+            template_contents = deepcopy(self.template_slide.contents)
+            current_label = 0
+            matched_pairs: dict[str, str] = {}
+
+            for template_group, group in zip(template_contents, slide.contents):
+                # group数が奇数の場合途中で終了し得るため
+                if not group:
+                    return
+
+                for textbox in template_group["textbox"]:
+                    text = textbox["text"]
+
+                    # group_idを指す文字列が存在すれば置換する
+                    text = re.sub('(@|＠).*\d+', group["group_id"], text)
+                    # labelを指す文字列が存在すれば置換する
+                    if re.search('(#|＃).*\d+', text):
+                        # 既にマッチしたlabelを指す文字列が存在する場合それを利用する
+                        if text in matched_pairs.keys():
+                            text = matched_pairs[text]
+                        # matched_pairsに存在しなければペアに追加して置換
+                        else:
+                            try:
+                                replacement_label = group["image"][current_label]["label"]
+                            except IndexError:
+                                break
+                            matched_pairs[text] = replacement_label
+                            text = re.sub('(#|＃).*\d+', replacement_label, text)
+                            current_label += 1
+
+                    textbox["text"] = text
+                group["textbox"] = template_group["textbox"]
+```
+
+- `template_slide.contents`(設定用PowerPointの情報)をコピー
+- `re`を使い、正規表現で置換対象の文字列を検索・置換
+  - 「`@` や `#` に続けて数字を入力してください」と伝えた場合、`@1, ＠2, @_1, @ 1`など、半角/全角が入り混じったり、区切り文字を入れたり入れなかったりするパターンが考えられると思います。そのどれにも対応出来るように正規表現を使いました。
 
 ### PowerPoint書き込み
 
@@ -596,18 +691,64 @@ TODO 画像を使ってグループ名/ラベル名を設定したことを書�
 6. ベースとなるスライドを削除
 7. 複製したPowerPointを保存
 
-何故こんな面倒なことをしたかというと、以下のような制約からです。
-
-- 全く同じ`SlideLayout`だったとしてもファイルを跨いで`SlideLayout`を使用することは出来ない。
-  - `add_slide`には`SlideLayout`が必要。
-- 表を作ってその中に画像を入れることが多い関係で、置換対象以外の図形は残しておきたい。
-  - 何故か表の中に画像を配置することが多いのです。見栄えが良いからでしょうか。
+何故こんな面倒なことをしたかというと、「表を作ってその中に画像を入れる」ことが多い関係で、置換対象以外の図形は残しておきたいためです。
+何故か表の中に画像を配置することが多いのです。見栄えが良いからでしょうか。
 
 ### GUI
 
-TODO 外観を示す
-TODO どこでどういったイベントが実行されるのか説明
+GUIは次のようになりました。
 
+![GUI-overview](https://user-images.githubusercontent.com/85564407/165257836-e0651fb7-fc15-401c-8996-34e1e3f443cd.png)
+
+イベントの管理にはハンドラーを使いました。
+
+といってもイベントをキーに、関数を値に持つ辞書を定義するだけです。
+
+```py:handler.py
+class Handler:
+    def __init__(self, controller: Controller) -> None:
+        self.controller = controller
+        self.functions = {
+            "-USER_UTIL_PWT-": self.controller.input_user_util_pwt,
+            "-SELECT_FOLDER-": self.controller.select_folder,
+            "-SELECT_FILES-": self.controller.select_files,
+            "-SRC_FOLDER-": self.controller.input_img_folder,
+            "-SRC_FILES-": self.controller.input_img_files,
+            "-SUBMIT-": self.controller.click_submit,
+        }
+
+    def handle(self, key, values):
+        if key not in self.functions:
+            return
+        event = self.functions[key]
+        event(values)
+```
+
+```py:main.py
+from src.Controllers.controller import Controller
+from src.Controllers.handler import Handler
+from src.Views.view import InterFace
+
+
+def main():
+    interface = InterFace()
+    controller = Controller(interface.window)
+    handler = Handler(controller)
+
+    while True:
+        event, values = interface.window.read()
+        handler.handle(event, values)
+
+        if event is None:
+            interface.close_window()
+            break
+
+
+if __name__ == "__main__":
+    main()
+```
+
+見ての通り、`main.py`がかなりスッキリします。~~それと、上級者っぽくてかっこいい~~
 
 ## 工夫点
 
@@ -634,6 +775,8 @@ TODO どこでどういったイベントが実行されるのか説明
 
 [こちらの記事](https://qiita.com/mm_sys/items/1fd3a50a930dac3db299)が詳しいですが、簡単に言うと最小限のPython実行環境をフォルダごと配布するようなイメージです。
 
+ツールを起動する`bat`ファイルも同じフォルダに入れておいて、`bat`ファイルのショートカットを好きな場所に置いて使ってもらうようにしました。
+
 デフォルトだとtkinter(及びそのラッパーであるPySimpleGUI)が使えないので[Stack Overflow](https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter)を参考にtkinterを使えるようにしました。
 
 ### エラーを通知する
@@ -644,12 +787,12 @@ TODO どこでどういったイベントが実行されるのか説明
 
 ### 型ヒントの使用・docstringの記述
 
-今までの開発では、「どうせ自分しか見ないソースコードだから」と型定義やdocstringは特に使用していませんでした。
+今までのPython開発では、「どうせ自分しか見ないソースコードだから」と型定義やdocstringは特に使用していませんでした。
 
 しかし、実際の開発現場で個人で作業するということはまずないと思います。
-他の人が参照する可能性のある変数やメソッドに型ヒント・ドキュメントが無いというのは中々に不便です。
+また、よく言われることですが過去の自分も他人のようなもので、先週書いていたコードの意味がわからない、という場面に遭遇しがちです。
 
-そのため、意識付けも兼ねて型ヒントの使用やdocstring(Numpy記法)を書くことを意識して開発を進めました。
+そのため、意識付けも兼ねて型ヒントの使用やdocstringを書くことを意識して開発を進めました。
 
 個人開発でも呼び出し側を書きやすい、エディタが型を勝手にチェックして警告を出してくれるので間違いに気づきやすいなどのメリットを享受出来たので、やってよかったです。
 
@@ -671,39 +814,45 @@ TODO どこでどういったイベントが実行されるのか説明
 
 今から書くのはちょっと面倒なので書きませんが、今後は何があろうがテストを書こうと決心しました。
 
-### 設計が雑
-
-主にクラスの役割の話になります。
-
-- 画像・テキストボックスの整理を担当するクラス
-- 「オブジェクトを所有するクラス」がオブジェクトへアクセスする方法
-
-など、振り返ってみると雑な点が目に付きます。
-
-設計時にデータの流れや各クラスの役割がハッキリしていなかったことが主な要因だと思います。
-もっと綺麗に設計出来るようになりたいです。
-
 ### 追加要望があった機能
 
-現時点では画像のトリミング機能を追加して欲しいという要望を受けました。
-随時追加していきたいです。
+- 画像のトリミング
+  - 貼り付け前に座標で一括、オブジェクトを認識して「良い感じ」にトリミングしてくれる、など。
+- GUI内に説明を表示
+  - マニュアルを見に行くのが面倒なときやちょっと確認したいときなど、GUI内に説明が表示されていると嬉しいとの要望がありました。
+  - 説明用のポップアップと、それを呼び出すためのボタンでも付けようかと思います。
 
 ## 参考記事
+
+python-pptx
+
+- [python-pptx — python-pptx 0.6.21 documentation](https://python-pptx.readthedocs.io/en/latest/index.html)
+- [【Python×PowerPoint】python-pptxの導入~ファイル・スライド作成方法を徹底解説 | Pythonでもっと自由を](https://www.shibutan-bloomers.com/python-libraly-pptx/988/)
+- [Python-pptx: copy slide - Stack Overflow](https://stackoverflow.com/questions/50866634/python-pptx-copy-slide)
+- [Is there a way to delete a shape with python-pptx - Stack Overflow](https://stackoverflow.com/questions/64700638/is-there-a-way-to-delete-a-shape-with-python-pptx)
+
+PySimpleGUI
+
+- [Call reference - PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/call%20reference/)
+- [Cookbook - PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/cookbook/)
+- [PySimpleGUIでGUIアプリを作ってみた ~その1~](https://it-for-pharma.com/pysimplegui%e3%81%a7gui%e3%82%a2%e3%83%97%e3%83%aa%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f-%e3%81%9d%e3%81%ae1)
+  - ハンドラーでイベント管理する、スタイルを辞書に切り出すなどの考え方を参考にさせていただきました。
+
+TypedDict
+
+- [[Python3.8～]ビルトインのTypedDictについて詳しく調べてみた（PEP589） - Qiita](https://qiita.com/simonritchie/items/63218b0a5c4a3d3632a1)
+- [[Python]PylanceのVS Code拡張機能をさっそく使ってみた。 - Qiita](https://qiita.com/simonritchie/items/33ca57cdb5cb2a12ae16)
+  - VSCodeのデフォルトだと型チェックが効かないことがあるのでこの記事を参考に設定を変更しました。
 
 embeddable python
 
 - [超軽量、超高速な配布用Python「embeddable python」 - Qiita](https://qiita.com/mm_sys/items/1fd3a50a930dac3db299)
 - [4. Windows で Python を使う — Python 3.10.4 ドキュメント](https://docs.python.org/ja/3/using/windows.html#the-embeddable-package)
-embeddable python へtkinterを導入
-
 - [Python embeddable zip: install Tkinter - Stack Overflow](https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter)
-
-Python 型定義・ヒント
-
-- [[Python3.8～]ビルトインのTypedDictについて詳しく調べてみた（PEP589） - Qiita](https://qiita.com/simonritchie/items/63218b0a5c4a3d3632a1)
-- [[Python]PylanceのVS Code拡張機能をさっそく使ってみた。 - Qiita](https://qiita.com/simonritchie/items/33ca57cdb5cb2a12ae16)
-
-
+  - tkinterの導入
 
 その他
-[製造現場向けの自動化ツールをPythonで作る時に留意すること - Qiita](https://qiita.com/banquet_kuma/items/ab30e69b999c2f451de3)
+- [製造現場向けの自動化ツールをPythonで作る時に留意すること - Qiita](https://qiita.com/banquet_kuma/items/ab30e69b999c2f451de3)
+- 動作サンプルに使用した画像
+  - [【フリーアイコン】 フルーツ](https://sozai.cman.jp/icon/food/fruits/)
+  - [【フリーアイコン】 矢印（上下左右）](https://sozai.cman.jp/icon/arrow/base1/)
