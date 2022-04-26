@@ -124,7 +124,7 @@ python-pptxはその名の通りPythonからPowerPointを操作出来るライ�
 公式ドキュメントに基本的な使い方はだいたい載っています。
 [python-pptx — python-pptx 0.6.21 documentation](https://python-pptx.readthedocs.io/en/latest/index.html)
 
-こちらのサイトもわかりやすいです。
+日本語だとこちらのサイトがわかりやすいです。
 [【Python×PowerPoint】python-pptxの導入~ファイル・スライド作成方法を徹底解説 | Pythonでもっと自由を](https://www.shibutan-bloomers.com/python-libraly-pptx/988/)
 
 ### 基本的な使い方
@@ -145,11 +145,8 @@ prs = pptx.Presentation("./sample.pptx")
 
 # 空のPresentationを作ることも出来る
 prs = pptx.Presentation()
-```
 
-`save`にパスを渡すことで保存することが出来ます。
-
-```python
+# saveで保存
 prs.save('./sample.pptx')
 ```
 
@@ -189,7 +186,6 @@ layout = prs.slides.get_by_name("白紙")
 [Shapes — python-pptx 0.6.21 documentation](https://python-pptx.readthedocs.io/en/latest/api/shapes.html#shape-objects-in-general)
 
 `Shape`オブジェクト(スライドが持つコンテンツ)にアクセスしたい場合、対象のオブジェクト(`Slide`)の`shapes`プロパティにアクセスします。
-`shapes`は、スライド内にあるすべての要素を管理するイテラブルオブジェクトです。
 
 ```python
 shapes = slide.shapes
@@ -236,13 +232,13 @@ picture.rotation = 45 # +なら時計回り -なら反時計回り
 #### テキストボックスの挿入
 
 テキストボックスに限りませんが、テキストを扱うためには`text_frame`プロパティにアクセスします。
-`TextFrame`は`paragraph`(段落)を持ち、段落ごとにフォント・書式などの設定をするイメージです。
+`TextFrame`は`paragraph`(段落)を持ちます。`paragraph`ごとにフォント・書式などの設定をするイメージです。
 
 ```python
 txBox = sld0.shapes.add_textbox(left, top, width, height)    #Text Box Shapeオブジェクトの追加
 
 tf = txBox.text_frame		# TextFrameオブジェクトの設定
-tf.text = "This is text inside a textbox"            # TextFrameオブジェクトにはデフォルトで1つ段落を持つ
+tf.text = "This is text inside a textbox"            # TextFrameオブジェクトはデフォルトで1つ段落を持つ
 
 p = tf.add_paragraph()		                           # paragraphオブジェクトの追加作成(2段落目)
 p.text = "This is a second paragraph that's bold"    # textプロパティによる文字列の設定
@@ -254,7 +250,7 @@ p.font.bold = True		                               # font.boldプロパティに
 デフォルトではemu(English Metric Units)という単位を使用しています。
 1 cm = 360000 emuです。
 
-基本的には座標情報の取得 → 図形挿入をするだけなので、デフォルト単位のemuで問題ないです。
+基本的には座標情報の取得 → 図形挿入をするだけなので、デフォルト単位のemuで問題なかったです。
 サイズを手打ちで指定したいときなど、人間が見やすく加工する必要があれば`pptx.util`を`importしてきて変換することも出来ます`。
 
 * `Cm` : cm単位
@@ -298,7 +294,7 @@ slides = list(xml_slides)
 xml_slides.remove(slides[slide_index])
 ```
 
-### スライドから特定の要素を削除
+### スライドから特定の`shape_type`の要素を削除
 
 [Is there a way to delete a shape with python-pptx - Stack Overflow](https://stackoverflow.com/questions/64700638/is-there-a-way-to-delete-a-shape-with-python-pptx)を参考に。
 
@@ -313,9 +309,9 @@ for shape in shapes:
 
 ## PySimpleGUI
 
-PySimpleGUIはtkinterというPython標準GUIのラッパーで、tkinterと比べて直感的にGUIを作る事が出来ます。
+PySimpleGUIはtkinter(Python標準GUI)のラッパーで、tkinterと比べて直感的にGUIを作る事が出来ます。
 
-PySimpleGUIも公式ドキュメントにだいたい載っています。
+PySimpleGUIも使い方は公式ドキュメントにだいたい載っています。
 [Call reference - PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/call%20reference/)
 [Cookbook - PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/cookbook/)
 
@@ -355,9 +351,12 @@ PySimpleGUIも公式ドキュメントにだいたい載っています。
 
 既にPySimpleGUIの基本的な使い方についての解説記事は多数あるので、あまり見かけなかった使い方だけ書いていきます。
 
-[PySimpleGUIでGUIアプリを作ってみた ~その1~](https://it-for-pharma.com/pysimplegui%e3%81%a7gui%e3%82%a2%e3%83%97%e3%83%aa%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f-%e3%81%9d%e3%81%ae1)
-[Pythonでも簡単にGUIは作れる - Qiita](https://qiita.com/konitech913/items/61dc715ddaad54505a29)
-[Tkinterを使うのであればPySimpleGUIを使ってみたらという話 - Qiita](https://qiita.com/dario_okazaki/items/656de21cab5c81cabe59)
+基本的な使い方の参考になりそうな記事
+
+- [PySimpleGUIでGUIアプリを作ってみた ~その1~](https://it-for-pharma.com/pysimplegui%e3%81%a7gui%e3%82%a2%e3%83%97%e3%83%aa%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%9f-%e3%81%9d%e3%81%ae1)
+- [Pythonでも簡単にGUIは作れる - Qiita](https://qiita.com/konitech913/items/61dc715ddaad54505a29)
+- [Tkinterを使うのであればPySimpleGUIを使ってみたらという話 - Qiita](https://qiita.com/dario_okazaki/items/656de21cab5c81cabe59)
+- [マイブームPySimpleGUIを紹介｜eetann｜note](https://note.com/hideharu092/n/n9dc1c1075a7b)
 
 ### 要素の動的な更新(`update`)
 
@@ -435,10 +434,10 @@ sg.InputText("イベントが有効な要素", enable_events=True)
 
 そこで、`FolderBrowse`と紐付いている`InputText`の`enable_events`を`True`にします。
 
-下の例では`FolderBrowse`からの入力を`InputText`が受け取ったときにイベント(スライド選択用コンボボックスの更新)が走っています。
+下の例では`FolderBrowse`からの入力を`InputText`が受け取ったときにイベント(スライド選択用コンボボックスの更新)が実行されています。
 ![input_event_eneble](https://user-images.githubusercontent.com/85564407/165041101-734feb6e-bcc8-4d8c-8080-7473de8c378b.gif)
 
-なお、`InputText`の場合はユーザーが1文字でも入力したらイベントが発火するようになるので、入力が有効かチェックする、`disabled = True`にして`FolderBrowse`からの入力以外を受け付けないようにする、などの対策が必要です。
+なお、`InputText`の場合はユーザーが1文字でも入力したらイベントが発火するようになるので、入力が有効かチェックする、`disabled=True`にして`FolderBrowse`からの入力以外を受け付けないようにする、などの対策が必要です。
 
 #### その他の例
 
@@ -447,9 +446,131 @@ sg.InputText("イベントが有効な要素", enable_events=True)
 - `Radio`
   - ラジオボタンが選択されたときに発火
 
+### スタイルを辞書に切り出す
+
+PySimpleGUIは、コンポーネントのスタイルをインスタンス化する際に引数として渡すことで設定します。
+
+小規模なGUIならむしろわかりやすくて良いのですが、ある程度以上の規模になってくるとスタイルの指定やデフォルトで使用不可な要素の設定がわかりにくいという問題が発生しがちです。
+
+次のコードは公式cookbookから拝借してきたものですが、結構わかりにくい気がします。
+
+> ```py
+> import PySimpleGUI as sg      
+> 
+> sg.theme('GreenTan')      
+> 
+> # ------ Menu Definition ------ #      
+> menu_def = [['File', ['Open', 'Save', 'Exit', 'Properties']],      
+>             ['Edit', ['Paste', ['Special', 'Normal', ], 'Undo'], ],      
+>             ['Help', 'About...'], ]      
+> 
+> # ------ Column Definition ------ #      
+> column1 = [[sg.Text('Column 1', background_color='#F7F3EC', justification='center', size=(10, 1))],      
+>             [sg.Spin(values=('Spin Box 1', '2', '3'), initial_value='Spin Box 1')],      
+>             [sg.Spin(values=('Spin Box 1', '2', '3'), initial_value='Spin Box 2')],      
+>             [sg.Spin(values=('Spin Box 1', '2', '3'), initial_value='Spin Box 3')]]      
+> 
+> layout = [      
+>     [sg.Menu(menu_def, tearoff=True)],      
+>     [sg.Text('All graphic widgets in one window!', size=(30, 1), justification='center', font=("Helvetica", 25), > relief=sg.RELIEF_RIDGE)],    
+>     [sg.Text('Here is some text.... and a place to enter text')],      
+>     [sg.InputText('This is my text')],      
+>     [sg.Frame(layout=[      
+>     [sg.Checkbox('Checkbox', size=(10,1)),  sg.Checkbox('My second checkbox!', default=True)],      
+>     [sg.Radio('My first Radio!     ', "RADIO1", default=True, size=(10,1)), sg.Radio('My second Radio!', "RADIO1")]], title='Options',title_color='red', relief=sg.RELIEF_SUNKEN, tooltip='Use these to set flags')],      
+>     [sg.Multiline(default_text='This is the default Text should you decide not to type anything', size=(35, 3)),      
+>         sg.Multiline(default_text='A second multi-line', size=(35, 3))],      
+>     [sg.InputCombo(('Combobox 1', 'Combobox 2'), size=(20, 1)),      
+>         sg.Slider(range=(1, 100), orientation='h', size=(34, 20), default_value=85)],      
+>     [sg.InputOptionMenu(('Menu Option 1', 'Menu Option 2', 'Menu Option 3'))],      
+>     [sg.Listbox(values=('Listbox 1', 'Listbox 2', 'Listbox 3'), size=(30, 3)),      
+>         sg.Frame('Labelled Group',[[      
+>         sg.Slider(range=(1, 100), orientation='v', size=(5, 20), default_value=25),      
+>         sg.Slider(range=(1, 100), orientation='v', size=(5, 20), default_value=75),      
+>         sg.Slider(range=(1, 100), orientation='v', size=(5, 20), default_value=10),      
+>         sg.Column(column1, background_color='#F7F3EC')]])],      
+>     [sg.Text('_'  * 80)],      
+>     [sg.Text('Choose A Folder', size=(35, 1))],      
+>     [sg.Text('Your Folder', size=(15, 1), auto_size_text=False, justification='right'),      
+>         sg.InputText('Default Folder'), sg.FolderBrowse()],      
+>     [sg.Submit(tooltip='Click to submit this window'), sg.Cancel()]    
+> ]      
+> 
+> 
+> window = sg.Window('Everything bagel', layout, default_element_size=(40, 1), grab_anywhere=False)      
+> 
+> event, values = window.read()      
+> 
+> window.close()    
+> 
+> sg.popup('Title',      
+>             'The results of the window.',      
+>             'The button clicked was "{}"'.format(event),      
+>             'The values are', values)      
+> ```
+> 
+> ![demo](https://user-images.githubusercontent.com/13696193/45920376-22d89000-be71-11e8-8ac4-640f011f84d0.jpg)
+> 
+> [Cookbook - PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/cookbook/>#recipe-nearly-all-elements-with-color-theme-menus-the-everything-bagel)
+
+それを解決するために辞書を使います。
+
+Pythonでは`**kwargs`のように`**`をつけた引数を定義すると、任意の数のキーワード引数を指定することが出来るようになります。
+関数呼び出し時に辞書オブジェクトに**をつけて引数に指定することで、key⇔valueのペアをキーワード⇔引数のペアとして関数に渡せるのです。
+
+> ```py
+> def func_kwargs_positional(arg1, arg2, **kwargs):
+>     print('arg1: ', arg1)
+>     print('arg2: ', arg2)
+>     print('kwargs: ', kwargs)
+> 
+> d = {'key1': 1, 'key2': 2, 'arg1': 100, 'arg2': 200}
+> 
+> func_kwargs_positional(**d)
+> # arg1:  100
+> # arg2:  200
+> # kwargs:  {'key1': 1, 'key2': 2}
+> ```
+> [Pythonの可変長引数（*args, **kwargs）の使い方 | note.nkmk.me](https://note.nkmk.me/python-args-kwargs-usage/)
+
+コレを利用して、`size`, `font`, `disabled`などの設定を辞書に移す事ができます。
+
+```py
+# イメージ
+
+WINDOW_STYLES = {
+    "title": TITLE,
+    "size": WINDOW_SIZE,
+    "font": FONT,
+    "resizable": True,
+}
+
+PWT_BROWSE_STYLES = {
+    "INPUT_TEXT": {
+        "key": "-USER_UTIL_PWT-",
+        "enable_events": True,
+        "disabled": True,
+        "size": (30, 1),
+    },
+    # ...
+}
+
+# スタイルを展開して渡す
+file_browse = sg.FileBrowse("ファイル選択", **PWT_BROWSE_STYLES["FILE_BROWSE"])
+window = sg.Window(layout=[[file_browse]], **WINDOW_STYLES)
+```
+
+このようにすることで、似たようなスタイルの場合使い回せる、スタイルの変更が容易になるなどのメリットがあります。
+
 ## 実装内容
 
 ### 設計
+
+
+
+### GUI
+
+
 
 ### PowerPoint書き込み
 
