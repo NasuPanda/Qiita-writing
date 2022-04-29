@@ -20,7 +20,7 @@ python-pptxとPySimpleGUIを使って**PowerPointで指定したフォーマッ�
 
 という要素を持つツールを作成しました。
 
-基本機能 3日 + リファクタリング 1日で完成させました。
+だいたい3日で完成させました。
 
 ## 作ったもの
 
@@ -205,8 +205,10 @@ for shape in shapes:
 座標やサイズなど。
 
 ```py
-coordinates = shape.left, shape.top
-size = shape.width, shape.height
+left = shape.left
+top = shape.top
+width = shape.width
+height = shape.height
 text = shape.text
 
 # add〇〇系のメソッドで使う
@@ -269,9 +271,7 @@ Cm(enum)
 
 ### スライドの複製
 
-[Python-pptx: copy slide - Stack Overflow](https://stackoverflow.com/questions/50866634/python-pptx-copy-slide)を参考にしました。
-
-PowerPointの仕様に詳しくなりたいわけではないので、複雑な実装はStackOverFlowの力を借りました。
+[Python-pptx: copy slide - Stack Overflow](https://stackoverflow.com/questions/50866634/python-pptx-copy-slide)を参考に。
 
 ```py
 base_slide = prs.slides[base_slide_index]
@@ -771,15 +771,17 @@ if __name__ == "__main__":
 - ユーザー視点でexe化と大差ない
 - 改修が楽
 
-上2つを満たす選択肢として、今回は**embeddable pythonによる配布**という方法を取りました。(Windows限定)
+上2つを満たす配布方法として、今回は**embeddable pythonによる配布**という選択肢を取りました。(Windows限定)
 
 [こちらの記事](https://qiita.com/mm_sys/items/1fd3a50a930dac3db299)が詳しいですが、簡単に言うと最小限のPython実行環境をフォルダごと配布するようなイメージです。
 
-ツールを起動する`bat`ファイルも同じフォルダに入れておいて、`bat`ファイルのショートカットを好きな場所に置いて使ってもらうようにしました。
+ツールの実体である`main.py`を起動する`bat`ファイルも同じフォルダに入れておいて、`bat`ファイルのショートカットを好きな場所に置いて使ってもらうようにしました。
 
-デフォルトだとtkinter(及びそのラッパーであるPySimpleGUI)が使えないので[Stack Overflow](https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter)を参考にtkinterを使えるようにしました。
+embeddable python はデフォルトだとtkinter(及びそのラッパーであるPySimpleGUI)が使えないので[Stack Overflow](https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter)を参考にtkinterを使えるようにしました。
 
-### エラーを通知する
+### エラーをちゃんと通知する
+
+TODO エラー通知の実装
 
 前述の他部署が作った画像貼り付けツールは、「入力したフォルダに画像が無い」「結果出力先に設定されているサーバが停止している」などの理由で正常に動作しなかった場合に何も通知してくれませんでした。
 
@@ -794,7 +796,7 @@ if __name__ == "__main__":
 
 そのため、意識付けも兼ねて型ヒントの使用やdocstringを書くことを意識して開発を進めました。
 
-個人開発でも呼び出し側を書きやすい、エディタが型を勝手にチェックして警告を出してくれるので間違いに気づきやすいなどのメリットを享受出来たので、やってよかったです。
+個人開発でも関数呼び出し側を書きやすい、エディタが型を勝手にチェックして警告を出してくれるので間違いに気づきやすいなどのメリットを享受出来たので、やってよかったです。
 
 ## 改善点
 
@@ -821,13 +823,16 @@ if __name__ == "__main__":
 - GUI内に説明を表示
   - マニュアルを見に行くのが面倒なときやちょっと確認したいときなど、GUI内に説明が表示されていると嬉しいとの要望がありました。
   - 説明用のポップアップと、それを呼び出すためのボタンでも付けようかと思います。
+- Excelから画像を貼り付ける機能が欲しい
+  - 装置の中にはExcelに画像を貼り付ける形式で出力するものもあるので、Excelの画像を取り出す→PowerPointに貼り付けるという機能が欲しいそうです。
+  - ~~Excelそのまま使えよ~~
 
 ## 参考記事
 
 python-pptx
 
 - [python-pptx — python-pptx 0.6.21 documentation](https://python-pptx.readthedocs.io/en/latest/index.html)
-- [【Python×PowerPoint】python-pptxの導入~ファイル・スライド作成方法を徹底解説 | Pythonでもっと自由を](https://www.shibutan-bloomers.com/python-libraly-pptx/988/)
+- [【Python×PowerPoint】python-pptxの導入~ファイル・スライド作成方法を徹底解説](https://www.shibutan-bloomers.com/python-libraly-pptx/988/)
 - [Python-pptx: copy slide - Stack Overflow](https://stackoverflow.com/questions/50866634/python-pptx-copy-slide)
 - [Is there a way to delete a shape with python-pptx - Stack Overflow](https://stackoverflow.com/questions/64700638/is-there-a-way-to-delete-a-shape-with-python-pptx)
 
@@ -853,6 +858,7 @@ embeddable python
 
 その他
 - [製造現場向けの自動化ツールをPythonで作る時に留意すること - Qiita](https://qiita.com/banquet_kuma/items/ab30e69b999c2f451de3)
+  - ツールの作成・展開に当たっての留意点を参考にしました。製造現場ではありませんが、現場のレベル感は似たようなものなので。
 - 動作サンプルに使用した画像
   - [【フリーアイコン】 フルーツ](https://sozai.cman.jp/icon/food/fruits/)
   - [【フリーアイコン】 矢印（上下左右）](https://sozai.cman.jp/icon/arrow/base1/)
