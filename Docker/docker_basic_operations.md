@@ -1379,3 +1379,5 @@ docker push [イメージ名　かつ リポジトリ名]
 DockerHubに登録したイメージは `docker pull` で利用することが出来る。
 
 また、ログインしている状態であれば直接 `docker run` することも出来る。
+
+# 補足: Rails環境構築用 `Dockerfile` の例
