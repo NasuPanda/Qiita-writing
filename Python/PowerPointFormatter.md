@@ -1,24 +1,29 @@
+<!--
+title: Pythonでパワポ報告資料作成を効率化する(誰でも使えるように)
+tags: Python PowerPoint 業務効率化 Windows
+-->
+
 # はじめに
 
-python-pptxとPySimpleGUIを使って**PowerPointで指定したフォーマットに画像を貼り付けるツール**を作ったので紹介します。
+python-pptxとPySimpleGUIを使って**PowerPointで作ったフォーマット位置に画像を貼り付けるツール**を作ったので紹介します。
 
 ## 開発の経緯
 
 現職では主に製品の実証試験的な業務を担当しています。
 業務の性質上、エビデンスとして画像を撮影 → PowerPoint(報告用)に貼り付ける という作業が多く発生します。
 
-そういった作業が多くあるので既に効率化は図られていて、「枚数を指定すると一定間隔で画像を貼り付けてくれるツール」は存在します。(他部署が作成)
+そういった作業が多くあるので既に効率化は図られていて、「枚数を指定すると一定間隔で画像を貼り付けてくれるツール」は存在します。(DXする部署が作成)
 
 しかし、実際に報告資料を作成する際に欲しいのは**決まったフォーマット・画像の配置**であることが多いです。
-そのため、一定間隔で貼り付けることが出来たとしてもそれをそのまま報告に使うことはほとんど出来ず、結局手作業で画像をペタペタしている人が多くいます。
+そのため、一定間隔で貼り付けることが出来たとしてもそれをそのまま報告に使うことはほとんど出来ず、結局手作業で画像の位置を調整している人が多くいます。
 
-そこで、上司に相談したり職場の方に聞き込みをしたりして、
+そこで、上司に相談したり、職場の方に聞き込みをしたりして、
 
-①フォーマットを自由に指定出来る
-②PowerPointを使って(=誰でも使える)フォーマットを指定できる
-③テキストをデータ名に置換出来たりすると嬉しい
+1. フォーマットを自由に指定出来る
+2. PowerPointを使って(=誰でも使える)フォーマットを指定できる
+3. テキストをデータ名に置換出来たりすると嬉しい
 
-という要素を持つツールを作成しました。
+という要素を持つツールがあれば良さそう、という結論に至ったので作りました。
 
 だいたい3日で完成させました。
 
@@ -28,11 +33,11 @@ PowerPointで作成したフォーマットを使用して画像貼り付け・�
 
 ![PowerPointGenerator_特定レイアウト_デモ](https://user-images.githubusercontent.com/85564407/165084584-f053af27-3270-483d-a5b9-ba40b46f37da.gif)
 
-**主な機能**
+### 主な機能
 
-- 1データに画像が複数存在する場合、指定したラベル位置に画像を貼り付ける事ができます。
-  - 1データに対して複数のレイアウト(正面、背面、側面、、、)の画像が存在するイメージです。
-- 連番になっているデータ(1データ1画像)の場合、指定した位置に対して順番に画像を貼り付ける事ができます。
+- 1データに画像が複数存在する場合、指定したラベル位置に画像を貼り付けます。
+  - 1データに対して複数のレイアウト(正面、背面、側面...)の画像が存在するイメージです。
+- 連番になっているデータ(1データ:1画像)の場合、指定した位置に対して順番に画像を貼り付けます。
 - 四角形 → 画像 への置換
   - 四角形の配置 = 画像の配置
   - 四角形のテキスト = 画像のラベル
@@ -56,11 +61,11 @@ PowerPointで作成したフォーマットを使用して画像貼り付け・�
 下の例では 2データ/1スライド なので、「1_右」, 「2_右」のように `_` で「連番」と「ラベル名」を区切ります。
 ![ラベリング_フォーマット](https://user-images.githubusercontent.com/85564407/165007818-aa214818-b1c2-4a6d-a8a8-8195f7458766.png)
 
-※ ラベル位置貼り付けの場合はテキスト置換を使う必要が無い(毎回ラベルが同じになるため)ので、置換ラベル(#〇〇)の指定順序がおかしいように思えるのは正しいです。特に順番を指定していないのでこうなっています。
+※ ラベル位置貼り付けの場合はテキスト置換を使う必要が無い(毎回ラベルが同じになるため)ので、置換ラベル(#〇〇)の順序がバラバラです。
 
 **入力画像**
 
-ねずみ_右の場合は「ねずみ」がデータ名 /「右」がラベルとして扱われます。
+ねずみ_右の場合は「ねずみ」or「右」のどちらかをラベルとして指定します。
 ![image](https://user-images.githubusercontent.com/85564407/165009884-babf36f4-3558-493b-ad4e-54f3cec36d40.png)
 
 **出力されるPowerPoint**
@@ -341,7 +346,7 @@ PySimpleGUIも使い方は公式ドキュメントにだいたい載っていま
 > window.close()
 > ```
 >
-> ![demo](https://qiita-user-contents.imgix.net/https%3A%2F%2Fqiita-image-store.s3.ap-northeast-1.amazonaws.com%2F0%2F634673%2Fc50195fe-685b-4eb8-d59b-f4ce4cc8ad17.png?ixlib=rb-4.0.0&auto=format&gif-q=60&q=75&w=1400&fit=max&s=a95eafa538915407c1b5c38097b817b0)
+> ![PySimpleGUI-demo](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/1224564/6933d135-78ac-3f37-fd10-4efbae7f77db.png)
 >
 > [Pythonでも簡単にGUIは作れる - Qiita](https://qiita.com/konitech913/items/61dc715ddaad54505a29#python%E3%81%A0%E3%81%A3%E3%81%A6gui%E3%82%92%E4%BD%9C%E3%82%8A%E3%81%9F%E3%81%84) より
 
@@ -385,7 +390,7 @@ PySimpleGUIも使い方は公式ドキュメントにだいたい載っていま
 > [Cookbook - PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/cookbook/#recipe-pattern-2b-persistent-window-multiple-reads-using-an-event-loop-updates-data-in-window)より
 
 `update`はキーワードを何も指定しない(上の例)とテキストを更新します。
-また、特定の属性を指定すると、その属性を変更することが出来ます。
+特定の属性を指定すればその属性を更新することが出来ます。
 
 コレを利用してイベントが発火したときに要素の有効/無効を切り替える、ユーザーの入力を元に要素を書き換える、といったことが可能です。
 
@@ -409,7 +414,7 @@ sg.FolderBrowse("フォルダ選択", disabled=True)
 
 ![disabled_toggle](https://user-images.githubusercontent.com/85564407/165041080-b6edf979-41f2-4533-a357-9314d9559d5a.gif)
 
-普通に要素を隠したい場合は`visible`を`False`にすれば良いですが、操作して欲しくないけど隠したくもない箇所に対してはこちらを使います。
+普通に要素を隠したい場合は`visible=False`で良いですが、操作して欲しくないけど隠したくもない箇所に対してはこちらを使います。
 
 ### `enable_events`
 
@@ -443,75 +448,14 @@ sg.InputText("イベントの有効化", enable_events=True)
 
 ### スタイルを辞書に切り出す
 
-PySimpleGUIは、コンポーネントをインスタンス化する際にスタイルなどの設定を引数として渡すことで設定を行います。
+スタイルなどは、コンポーネントをインスタンス化する際に引数として渡すことで設定します。
 
-小規模なGUIならむしろわかりやすくて良いのですが、ある程度以上の規模になってくるとスタイルやデフォルトの要素の状態などの設定がわかりにくいという問題が発生しがちです。
-
-次のコードは公式cookbookから拝借してきたものですが、そこそこわかりにくい感じがします。
-
-> ```py
-> import PySimpleGUI as sg      
-> 
-> sg.theme('GreenTan')      
-> 
-> # ------ Menu Definition ------ #      
-> menu_def = [['File', ['Open', 'Save', 'Exit', 'Properties']],      
->             ['Edit', ['Paste', ['Special', 'Normal', ], 'Undo'], ],      
->             ['Help', 'About...'], ]      
-> 
-> # ------ Column Definition ------ #      
-> column1 = [[sg.Text('Column 1', background_color='#F7F3EC', justification='center', size=(10, 1))],      
->             [sg.Spin(values=('Spin Box 1', '2', '3'), initial_value='Spin Box 1')],      
->             [sg.Spin(values=('Spin Box 1', '2', '3'), initial_value='Spin Box 2')],      
->             [sg.Spin(values=('Spin Box 1', '2', '3'), initial_value='Spin Box 3')]]      
-> 
-> layout = [      
->     [sg.Menu(menu_def, tearoff=True)],      
->     [sg.Text('All graphic widgets in one window!', size=(30, 1), justification='center', font=("Helvetica", 25), > relief=sg.RELIEF_RIDGE)],    
->     [sg.Text('Here is some text.... and a place to enter text')],      
->     [sg.InputText('This is my text')],      
->     [sg.Frame(layout=[      
->     [sg.Checkbox('Checkbox', size=(10,1)),  sg.Checkbox('My second checkbox!', default=True)],      
->     [sg.Radio('My first Radio!     ', "RADIO1", default=True, size=(10,1)), sg.Radio('My second Radio!', "RADIO1")]], title='Options',title_color='red', relief=sg.RELIEF_SUNKEN, tooltip='Use these to set flags')],      
->     [sg.Multiline(default_text='This is the default Text should you decide not to type anything', size=(35, 3)),      
->         sg.Multiline(default_text='A second multi-line', size=(35, 3))],      
->     [sg.InputCombo(('Combobox 1', 'Combobox 2'), size=(20, 1)),      
->         sg.Slider(range=(1, 100), orientation='h', size=(34, 20), default_value=85)],      
->     [sg.InputOptionMenu(('Menu Option 1', 'Menu Option 2', 'Menu Option 3'))],      
->     [sg.Listbox(values=('Listbox 1', 'Listbox 2', 'Listbox 3'), size=(30, 3)),      
->         sg.Frame('Labelled Group',[[      
->         sg.Slider(range=(1, 100), orientation='v', size=(5, 20), default_value=25),      
->         sg.Slider(range=(1, 100), orientation='v', size=(5, 20), default_value=75),      
->         sg.Slider(range=(1, 100), orientation='v', size=(5, 20), default_value=10),      
->         sg.Column(column1, background_color='#F7F3EC')]])],      
->     [sg.Text('_'  * 80)],      
->     [sg.Text('Choose A Folder', size=(35, 1))],      
->     [sg.Text('Your Folder', size=(15, 1), auto_size_text=False, justification='right'),      
->         sg.InputText('Default Folder'), sg.FolderBrowse()],      
->     [sg.Submit(tooltip='Click to submit this window'), sg.Cancel()]    
-> ]      
-> 
-> 
-> window = sg.Window('Everything bagel', layout, default_element_size=(40, 1), grab_anywhere=False)      
-> 
-> event, values = window.read()      
-> 
-> window.close()    
-> 
-> sg.popup('Title',      
->             'The results of the window.',      
->             'The button clicked was "{}"'.format(event),      
->             'The values are', values)      
-> ```
-> 
-> ![demo](https://user-images.githubusercontent.com/13696193/45920376-22d89000-be71-11e8-8ac4-640f011f84d0.jpg)
-> 
-> [Cookbook - PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/cookbook/>#recipe-nearly-all-elements-with-color-theme-menus-the-everything-bagel)
+小規模なGUIなら良いのですが、ある程度以上の規模になってくるとコンポーネントごとの設定が見にくく、修正も面倒になってきます。
 
 それを解決するために辞書を使います。
 
-Pythonでは`**kwargs`のように`**`をつけて引数を定義すると、任意の数のキーワード引数を受け取ることが出来るようになります。
-関数呼び出し時に辞書オブジェクトに**をつけて引数に指定することで、key⇔valueのペアをキーワード⇔引数のペアとして関数に渡せるのです。
+Pythonでは`**kwargs`のように`**`をつけて引数を定義すると、その関数は任意の数のキーワード引数を受け取ることが出来るようになります。
+関数呼び出し時に辞書オブジェクトに`**`をつけて引数にすることで、`key:value`のペアを`キーワード:引数`のペアとして関数に渡せるのです。
 
 > ```py
 > def func_kwargs_positional(arg1, arg2, **kwargs):
@@ -611,28 +555,14 @@ class PresentationReader():
 
         return image_templates
 
-    def __set_content(self, content_type: str, shape) -> Image | TextBox:
-        if content_type == "image":
-            return Image(
-                coordinates=(shape.left, shape.top),
-                size=(shape.width, shape.height),
-                label=shape.text,
-                path=""
-            )
-        if content_type == "textbox":
-            return TextBox(
-                coordinates=(shape.left, shape.top),
-                size=(shape.width, shape.height),
-                label=shape.text,
-                text=shape.text
-            )
-
     # 省略...
 ```
 
 ### 出力用のスライド情報をセット
 
-画像ファイル名とPowerPointからの入力を使ってデータ名、`Image`、`TextBox`等の情報を持つ`Slide`を生成することで、出力用の情報をひとまとめにする形にしました。
+画像パスを元にラベル/データ名⇔画像パスの紐づけを行い、それを更にPowerPointからの入力(座標などの情報)と紐づけることで、データ名/`Image`/`TextBox`等の情報を持つ`Slide`を生成することで、出力用の情報をひとまとめにする形にしました。
+
+ここの実装はもう少し綺麗に出来た気がします。
 
 #### テキストの置換
 
@@ -677,7 +607,7 @@ class PresentationReader():
 
 - `template_slide.contents`(設定用PowerPointの情報)をコピー
 - `re`を使い、正規表現で置換対象の文字列を検索・置換
-  - 「`@` や `#` に続けて数字を入力してください」と伝えた場合、`@1, ＠2, @_1, @ 1`など、半角/全角が入り混じったり、区切り文字を入れたり入れなかったりするパターンが考えられると思います。そのどれにも対応出来るように正規表現を使いました。
+  - 「`@` や `#` に続けて数字を入力してください」と伝えた場合、`@1, ＠2, @_1, @ 1`など、半角/全角が入り混じったり、区切り文字を入れたり入れなかったりするパターンが考えられると思います。どのパターンにも対応出来るように正規表現を使いました。
 
 ### PowerPoint書き込み
 
@@ -748,24 +678,24 @@ if __name__ == "__main__":
     main()
 ```
 
-見ての通り、`main.py`がかなりスッキリします。~~それと、上級者っぽくてかっこいい~~
+見ての通り、`main.py`がかなりスッキリします。~~上級者っぽくてかっこいい~~
 
 ## 工夫点
 
 ### 使用までのハードルを下げる
 
-非IT系、特に高齢の方が多い部署では自動化への壁が多くあります。
-折角便利なツールを作成したとしても、ツールの使い方を覚えなければいけない、導入が面倒などの理由で使ってもらえないことも多くあります。
+現在所属している部署は非IT系、かつ高齢の方が多く、言うまでもなく効率化への壁が多くあります。
+このような環境では、ツール使用へのハードルを極力下げることが必要になってきます。
 
 自身の観測範囲内ではありますが、以下のようなツールが好まれる傾向にあるようです。
 
 ① PowerpointやExcel(=**使い慣れている**)で設定ができる
-② インストール不要、自分のPCにコピーすれば使える
+② インストール等の**面倒な作業**が不要、自分のPCにコピーすれば使える
 
 ①についてはPowerPointでフォーマットを指定できるようにして対処しました。
-また、**慣れている**という点で、データ名とラベルの区切りには`_`を採用しました。
+また、**慣れている**という点で、データ名とラベルの区切りには慣習的に使われている`_`を採用しました。
 
-②についてはPyinstallerによるexe化がメジャー(?)なようですが、生成されるファイルのサイズが大きすぎるし、動作も安定しないので個人的にはあまり好みではありません。
+②についてはPyinstallerによるexe化がメジャー(?)なようですが、生成されるファイルのサイズが大きすぎるし、動作も安定しないので個人的にあまり好みではありません。
 それに、改修の度にexe化するのも面倒です。
 
 - ユーザー視点でexe化と大差ない
@@ -781,29 +711,27 @@ embeddable python はデフォルトだとtkinter(及びそのラッパーであ
 
 ### エラーをちゃんと通知する
 
-TODO エラー通知の実装
-
 前述の他部署が作った画像貼り付けツールは、「入力したフォルダに画像が無い」「結果出力先に設定されているサーバが停止している」などの理由で正常に動作しなかった場合に何も通知してくれませんでした。
 
 問題があったときに何も通知されない~~苛立ち~~不便さは身に沁みていたので、不正な入力があった時は考えうる操作ミスを通知するようにしました。
 
 ### 型ヒントの使用・docstringの記述
 
-今までのPython開発では、「どうせ自分しか見ないソースコードだから」と型定義やdocstringは特に使用していませんでした。
+今までのPython開発では、「どうせ自分しか見ないソースコードだから」と型定義やdocstringは特に書いていませんでした。
 
 しかし、実際の開発現場で個人で作業するということはまずないと思います。
-また、よく言われることですが過去の自分も他人のようなもので、先週書いていたコードの意味がわからない、という場面に遭遇しがちです。
+また、よく言われることですが過去の自分も他人のようなもので、「先週書いていたコードの意味がわからない」という場面には結構な割合で遭遇します。
 
-そのため、意識付けも兼ねて型ヒントの使用やdocstringを書くことを意識して開発を進めました。
+そのため、意識付けも兼ねて型ヒントの使用やdocstringを書くようにしました。
 
-個人開発でも関数呼び出し側を書きやすい、エディタが型を勝手にチェックして警告を出してくれるので間違いに気づきやすいなどのメリットを享受出来たので、やってよかったです。
+実際に書いてみて、関数呼び出し側を書きやすい、エディタが勝手に型チェックして警告を出してくれるので間違いに気づきやすい、などのメリットを享受出来ました。やってよかったです。
 
 ## 改善点
 
 ### テストを書いていない
 
-- Web開発学習中のため、新しいテストフレームワークの使い方を覚えたくない
-- 早く完成させたい
+- Pythonのテストフレームワークは扱ったことがない。Web開発学習中のため、新しいテストフレームワークの使い方を覚えたくない。
+- 早く完成させたい。
 
 という理由でテストを書かないことにしました。
 
@@ -819,12 +747,12 @@ TODO エラー通知の実装
 ### 追加要望があった機能
 
 - 画像のトリミング
-  - 貼り付け前に座標で一括、オブジェクトを認識して「良い感じ」にトリミングしてくれる、など。
+  - 貼り付け前に座標で一括トリミング、オブジェクトを認識して「良い感じ」にトリミングしてくれる、など。
 - GUI内に説明を表示
   - マニュアルを見に行くのが面倒なときやちょっと確認したいときなど、GUI内に説明が表示されていると嬉しいとの要望がありました。
   - 説明用のポップアップと、それを呼び出すためのボタンでも付けようかと思います。
 - Excelから画像を貼り付ける機能が欲しい
-  - 装置の中にはExcelに画像を貼り付ける形式で出力するものもあるので、Excelの画像を取り出す→PowerPointに貼り付けるという機能が欲しいそうです。
+  - 試験装置の中にはExcel形式で出力するものもあるので、Excelの画像を取り出す→PowerPointに貼り付けるという機能が欲しいそうです。
   - ~~Excelそのまま使えよ~~
 
 ## 参考記事
