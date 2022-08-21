@@ -1,6 +1,6 @@
 # 参考
 
-- https://qiita.com/kerobot/items/3f4064d5174676080585#%E3%81%AF%E3%81%98%E3%82%81%E3%81%AB
+- [Windows 10 で Python のインストールから Poetry と pyenv の利用 - Qiita](https://qiita.com/kerobot/items/3f4064d5174676080585#%E3%81%AF%E3%81%98%E3%82%81%E3%81%AB)
 
 ***
 
